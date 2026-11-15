@@ -41,6 +41,9 @@ def country_from_iso2(code):
 
 def country_from_iso3(code):
     code = str(code).strip().upper()
+    # Kosovo is used by the World Bank as XKX; XK is a user-assigned ISO-2 code.
+    if code == "XKX":
+        return "Kosovo", "XK"
     country = pycountry.countries.get(alpha_3=code)
     if country:
         return country.name, country.alpha_2
