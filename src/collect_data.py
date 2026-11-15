@@ -36,7 +36,7 @@ def country_from_iso2(code):
     country = pycountry.countries.get(alpha_2=code)
     if country:
         return country.name, country.alpha_3
-    return code, None
+    raise RuntimeError(f"Unrecognized BIS reference area code: {code}")
 
 
 def country_from_iso3(code):
@@ -161,7 +161,7 @@ def bis_policy():
         is_country = iso3 is not None
         rows.append({
             "country": country_name,
-            "source_country_name": str(x[title_col]) if title_col else country_name,
+            "source_country_name": country_name,
             "entity_type": "country" if is_country else "region",
             "country_code": iso2 if is_country else None,
             "iso3": iso3,
@@ -233,12 +233,18 @@ def main():
     print(df.groupby(["entity_type", "rate_type", "frequency"], dropna=False).size().to_string())
     print(f"India rows: {india_rows}")
 
-    required = ["country", "entity_type", "country_code", "iso3", "observation_date",
-                "year", "interest_rate", "rate_type", "frequency", "source_name",
-                "source_url", "series_code", "source_retrieved_at"]
+    required = ["country", "entity_type", "observation_date", "year", "interest_rate",
+                "rate_type", "frequency", "source_name", "source_url", "series_code",
+                "source_retrieved_at"]
     missing_required = [c for c in required if c not in df.columns or df[c].isna().any()]
     if missing_required:
         raise RuntimeError(f"Missing required fields or values: {missing_required}")
+    country_rows = df["entity_type"] == "country"
+    if df.loc[country_rows, ["country_code", "iso3"]].isna().any().any():
+        raise RuntimeError("Country observations must have both ISO-2 and ISO-3 codes.")
+    region_rows = df["entity_type"] == "region"
+    if df.loc[region_rows, "iso3"].notna().any():
+        raise RuntimeError("Regional aggregates must not be assigned country ISO-3 codes.")
     if df.loc[df["frequency"] == "monthly", "month"].isna().any():
         raise RuntimeError("Monthly observations have missing month values.")
     if df.loc[df["frequency"] == "annual", "month"].notna().any():
