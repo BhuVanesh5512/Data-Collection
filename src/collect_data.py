@@ -90,7 +90,9 @@ def world_bank(indicator, rate_type):
 
         year = str(x["date"])
         period_start = f"{year}-01-01"
-        if START <= period_start <= END:
+        # Annual observations represent the whole calendar year. Include the
+        # start and end calendar years even when START is later than 1 January.
+        if int(year) >= int(START[:4]) and int(year) <= int(END[:4]):
             rows.append({
                 "country": canonical_name,
                 "source_country_name": source_country_name,
@@ -210,10 +212,22 @@ def main():
     df["observation_date"] = pd.to_datetime(df["observation_date"], errors="coerce")
     df["interest_rate"] = pd.to_numeric(df["interest_rate"], errors="coerce")
     df = df.dropna(subset=["country", "observation_date", "interest_rate", "rate_type"])
-    df = df[
-        (df.observation_date >= pd.Timestamp(START))
-        & (df.observation_date <= pd.Timestamp(END))
-    ]
+    # Apply date-window rules by source frequency. Annual records are calendar-
+    # year observations; monthly records are retained only for completed months
+    # inside the requested window.
+    annual_mask = (
+        df["frequency"].eq("annual")
+        & df["year"].between(int(START[:4]), int(END[:4]))
+    )
+    monthly_period_end = (
+        df["observation_date"] + pd.offsets.MonthEnd(0)
+    )
+    monthly_mask = (
+        df["frequency"].eq("monthly")
+        & (df["observation_date"] >= pd.Timestamp(START).replace(day=1))
+        & (monthly_period_end <= pd.Timestamp(END))
+    )
+    df = df[annual_mask | monthly_mask].copy()
 
     # Use ISO-3 for countries and the BIS reference-area code for non-country areas.
     df["geography_key"] = df["iso3"].fillna(df["series_code"].str.rsplit(".", n=1).str[-1])
