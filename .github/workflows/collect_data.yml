@@ -1,4 +1,4 @@
-name: Collect global bank interest rates
+name: Collect and verify global bank interest rates
 on:
   workflow_dispatch:
   schedule:
@@ -6,7 +6,7 @@ on:
 permissions:
   contents: write
 jobs:
-  collect:
+  collect_and_verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,16 +14,22 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
       - name: Collect official observations
         env:
           START_DATE: "2023-12-01"
           END_DATE: "2026-11-15"
         run: python src/collect_data.py
-      - name: Commit CSV
+      - name: Independently verify every rate against fresh official APIs
+        env:
+          START_DATE: "2023-12-01"
+          END_DATE: "2026-11-15"
+        run: python src/verify_data.py
+      - name: Commit dataset and verification reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/processed/global_bank_interest_rates.csv
-          git diff --cached --quiet || git commit -m "Update global bank interest rate dataset"
+          git add data/processed/global_bank_interest_rates.csv data/processed/source_verification.csv data/processed/source_verification_summary.json
+          git diff --cached --quiet || git commit -m "Update and source-verify bank interest rate dataset"
           git push
