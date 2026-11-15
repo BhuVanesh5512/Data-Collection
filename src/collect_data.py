@@ -4,6 +4,8 @@ from pathlib import Path
 import io
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 START = os.getenv("START_DATE", "2023-12-01")
 END = os.getenv("END_DATE", date.today().isoformat())
@@ -11,13 +13,25 @@ OUT = Path("data/processed/global_bank_interest_rates.csv")
 NOW = datetime.now(timezone.utc).isoformat(timespec="seconds")
 S = requests.Session()
 S.headers["User-Agent"] = "Data-Collection-research/1.0"
+# Retry temporary API failures and slow responses instead of aborting the workflow.
+retry = Retry(
+    total=6, connect=6, read=6, status=6,
+    backoff_factor=2,
+    status_forcelist=(429, 500, 502, 503, 504),
+    allowed_methods=frozenset(["GET"]),
+    respect_retry_after_header=True,
+)
+adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+S.mount("https://", adapter)
+S.mount("http://", adapter)
+REQUEST_TIMEOUT = (20, 240)
 
 def world_bank(indicator, rate_type):
     url = f"https://api.worldbank.org/v2/country/all/indicator/{indicator}"
     observations, page = [], 1
     while True:
         r = S.get(url, params={"date": f"{START[:4]}:{END[:4]}", "format":"json",
-                              "per_page":20000, "page":page}, timeout=120)
+                              "per_page":2000, "page":page}, timeout=REQUEST_TIMEOUT)
         r.raise_for_status()
         payload = r.json()
         if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
@@ -52,7 +66,7 @@ def world_bank(indicator, rate_type):
 def bis_policy():
     # BIS SDMX v1 data endpoint for the CBPOL policy-rate dataflow.
     url = "https://stats.bis.org/api/v1/data/WS_CBPOL/all"
-    r = S.get(url, params={"startPeriod":START,"endPeriod":END,"format":"csv"}, timeout=180)
+    r = S.get(url, params={"startPeriod":START,"endPeriod":END,"format":"csv"}, timeout=REQUEST_TIMEOUT)
     r.raise_for_status()
     df = pd.read_csv(io.BytesIO(r.content))
     df.columns = [str(c).strip() for c in df.columns]
