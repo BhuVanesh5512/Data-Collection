@@ -2,30 +2,23 @@
 
 Automated collection of official global interest-rate statistics using GitHub Actions.
 
-## Coverage
-- Central bank policy rates: BIS Central Bank Policy Rates (WS_CBPOL).
-- Lending rates: World Bank indicator FR.INR.LEND.
-- Deposit rates: World Bank indicator FR.INR.DPST.
-- Target observation window: December 2023 through November 2026.
+## Coverage and sources
+- **Central bank policy rates:** Bank for International Settlements (BIS) Central Bank Policy Rates, topic CBPOL. BIS documents long series for more than 40 advanced and emerging market economies, at daily and monthly frequency. Monthly observations are month-end values derived from daily data. [BIS CBPOL overview](https://data.bis.org/topics/CBPOL) · [BIS data documentation](https://www.bis.org/pages/statistics/cbpol-doc.pdf) · [BIS SDMX API](https://stats.bis.org/api-doc/v2/)
+- **Lending rates:** World Bank WDI indicator `FR.INR.LEND`. [Indicator page](https://data.worldbank.org/indicator/FR.INR.LEND)
+- **Deposit rates:** World Bank WDI indicator `FR.INR.DPST`. [Indicator page](https://data.worldbank.org/indicator/FR.INR.DPST)
+- **World Bank API documentation:** https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation
 
-The sources have different reporting frequencies. BIS policy-rate observations may be daily; World Bank lending and deposit indicators are annual. The pipeline preserves the source frequency and never fabricates monthly values or interpolates missing observations.
+## Date window
+The workflow requests 2023-12-01 through 2026-11-15. The latest period available depends on each source's publication schedule; November 2026 may be incomplete or not yet published.
 
 ## Output
-`data/processed/global_bank_interest_rates.csv`
+`data/processed/global_bank_interest_rates.csv` is an observation-level dataset with country, ISO3, observation date, rate type, rate, frequency, source, series code, source URL, and retrieval metadata.
 
-The GitHub Actions workflow can be run manually or on a monthly schedule. It commits updated output when the workflow succeeds.
+## Important limitations
+BIS policy rates cover more than 40 economies, not 100+. World Bank lending/deposit indicators have broader country coverage but are annual. Consequently, 100+ countries and 1,000+ observations are targets to assess against the real source data, not guaranteed outcomes. Annual and daily/monthly series remain at their original frequency. No interpolation, monthly upsampling, or invented values are permitted. If an upstream API changes its schema, the workflow should fail visibly rather than silently generate incomplete data.
 
-## Data sources and attribution
-- BIS, Central bank policy rates (WS_CBPOL): https://data.bis.org/ and https://stats.bis.org/api/v1/data/WS_CBPOL/.?startPeriod=2023-12-01&format=csvfile
-- World Bank, Lending interest rate (FR.INR.LEND): https://data.worldbank.org/indicator/FR.INR.LEND
-- World Bank, Deposit interest rate (FR.INR.DPST): https://data.worldbank.org/indicator/FR.INR.DPST
-- World Bank API documentation: https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation
+## Run
+Open **Actions → Collect global bank interest rates → Run workflow**. A monthly scheduled run is configured. The workflow commits the refreshed CSV when collection succeeds.
 
-BIS statistics must be attributed to the Bank for International Settlements. World Bank indicators should be attributed to the World Bank. This repository is not affiliated with or endorsed by either institution.
-
-## Important interpretation notes
-- `interest_rate` is a percentage rate as published by the source.
-- `frequency` records the actual source frequency (daily/monthly/quarterly/annual where available).
-- `observation_date` is the source reference period, not the download date.
-- Missing observations are omitted; no values are invented.
-- A 1,000-row / 100-country target is a validation goal, not a guarantee. The workflow reports actual coverage and fails the strict target check only when configured to do so.
+## Attribution
+Retain the original source references in the CSV. BIS statistics are subject to [BIS terms and citation guidance](https://data.bis.org/help/export). World Bank indicators should be attributed to the World Bank. This repository is not affiliated with or endorsed by either institution.
