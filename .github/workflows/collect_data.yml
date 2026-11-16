@@ -5,9 +5,13 @@ on:
     - cron: "17 3 5 * *"
 permissions:
   contents: write
+concurrency:
+  group: global-bank-interest-rate-collection
+  cancel-in-progress: false
 jobs:
   collect_and_verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -15,21 +19,26 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
       - name: Collect official observations
         env:
           START_DATE: "2023-12-01"
-          END_DATE: "2026-11-15"
         run: python src/collect_data.py
-      - name: Independently verify every rate against fresh official APIs
+      - name: Independently verify official observations
         env:
           START_DATE: "2023-12-01"
-          END_DATE: "2026-11-15"
         run: python src/verify_data.py
-      - name: Commit dataset and verification reports
+      - name: Build separate estimated monthly panel
+        run: python src/build_monthly_estimates.py
+      - name: Commit datasets and verification reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/processed/global_bank_interest_rates.csv data/processed/source_verification.csv data/processed/source_verification_summary.json
-          git diff --cached --quiet || git commit -m "Update and source-verify bank interest rate dataset"
+          git add data/processed/global_bank_interest_rates.csv
+          git add data/processed/global_bank_interest_rates_monthly_estimates.csv
+          git add data/processed/source_verification.csv
+          git add data/processed/source_verification_summary.json
+          git diff --cached --quiet || git commit -m "Update verified bank rates and monthly estimates"
           git push
