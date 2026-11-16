@@ -97,27 +97,31 @@ def country_from_iso3(code):
 
 def world_bank(indicator, rate_type):
     url = f"https://api.worldbank.org/v2/country/all/indicator/{indicator}"
-    observations, page = [], 1
-    while True:
-        r = S.get(
-            url,
-            params={
-                "date": f"{START[:4]}:{END[:4]}",
-                "format": "json",
-                "per_page": 2000,
-                "page": page,
-            },
-            timeout=REQUEST_TIMEOUT,
-        )
-        r.raise_for_status()
-        payload = r.json()
-        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            break
-        meta, batch = payload
-        observations.extend(batch)
-        if page >= int(meta.get("pages", 1)):
-            break
-        page += 1
+    observations = []
+    # Query one calendar year at a time. This avoids very large API responses
+    # that can time out when requesting all countries and years in one call.
+    for year in range(int(START[:4]), int(END[:4]) + 1):
+        page = 1
+        while True:
+            r = S.get(
+                url,
+                params={
+                    "date": str(year),
+                    "format": "json",
+                    "per_page": 1000,
+                    "page": page,
+                },
+                timeout=REQUEST_TIMEOUT,
+            )
+            r.raise_for_status()
+            payload = r.json()
+            if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
+                break
+            meta, batch = payload
+            observations.extend(batch)
+            if page >= int(meta.get("pages", 1)):
+                break
+            page += 1
 
     rows = []
     for x in observations:
@@ -141,6 +145,8 @@ def world_bank(indicator, rate_type):
             rows.append({
                 "country": canonical_name,
                 "source_country_name": source_country_name,
+                "bank_name": None,
+                "bank_name_status": "not_identified_by_source",
                 "institution_name": "Commercial banking sector (country-level aggregate)",
                 "institution_type": "banking_sector_aggregate",
                 "monetary_authority_name": None,
@@ -226,6 +232,8 @@ def bis_policy():
             "country": country_name,
             "source_country_name": country_name,
             "entity_type": "country" if is_country else "region",
+            "bank_name": CENTRAL_BANKS[iso2],
+            "bank_name_status": "identified_monetary_authority",
             "institution_name": CENTRAL_BANKS[iso2],
             "institution_type": "central_bank" if is_country else "regional_monetary_authority",
             "monetary_authority_name": CENTRAL_BANKS[iso2],
