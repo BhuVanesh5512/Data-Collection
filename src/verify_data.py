@@ -34,27 +34,29 @@ TIMEOUT = (20, 240)
 def fetch_world_bank(indicator):
     url = f"https://api.worldbank.org/v2/country/all/indicator/{indicator}"
     observations = []
-    page = 1
-    while True:
-        response = session.get(
-            url,
-            params={
-                "date": f"{START[:4]}:{END[:4]}",
-                "format": "json",
-                "per_page": 2000,
-                "page": page,
-            },
-            timeout=TIMEOUT,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-            break
-        metadata, batch = payload
-        observations.extend(batch)
-        if page >= int(metadata.get("pages", 1)):
-            break
-        page += 1
+    # Match the collector's smaller year-scoped requests to avoid large-response timeouts.
+    for year in range(int(START[:4]), int(END[:4]) + 1):
+        page = 1
+        while True:
+            response = session.get(
+                url,
+                params={
+                    "date": str(year),
+                    "format": "json",
+                    "per_page": 1000,
+                    "page": page,
+                },
+                timeout=TIMEOUT,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
+                break
+            metadata, batch = payload
+            observations.extend(batch)
+            if page >= int(metadata.get("pages", 1)):
+                break
+            page += 1
 
     expected = {}
     for item in observations:
