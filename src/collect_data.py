@@ -28,6 +28,51 @@ S.mount("https://", adapter)
 S.mount("http://", adapter)
 REQUEST_TIMEOUT = (20, 240)
 
+# Official monetary-authority names for BIS CBPOL reference areas.
+# Names are aligned to the BIS central-bank/member directory where listed.
+CENTRAL_BANKS = {
+    "AR": "Central Bank of Argentina",
+    "AU": "Reserve Bank of Australia",
+    "BR": "Central Bank of Brazil",
+    "CA": "Bank of Canada",
+    "CH": "Swiss National Bank",
+    "CL": "Central Bank of Chile",
+    "CN": "People's Bank of China",
+    "CO": "Bank of the Republic (Banco de la República)",
+    "CZ": "Czech National Bank",
+    "DK": "Danmarks Nationalbank",
+    "GB": "Bank of England",
+    "HK": "Hong Kong Monetary Authority",
+    "HU": "Magyar Nemzeti Bank",
+    "ID": "Bank Indonesia",
+    "IL": "Bank of Israel",
+    "IN": "Reserve Bank of India",
+    "IS": "Central Bank of Iceland",
+    "JP": "Bank of Japan",
+    "KR": "Bank of Korea",
+    "KW": "Central Bank of Kuwait",
+    "MA": "Bank Al-Maghrib",
+    "MK": "National Bank of the Republic of North Macedonia",
+    "MX": "Bank of Mexico",
+    "MY": "Bank Negara Malaysia",
+    "NO": "Norges Bank",
+    "NZ": "Reserve Bank of New Zealand",
+    "PE": "Central Reserve Bank of Peru",
+    "PH": "Bangko Sentral ng Pilipinas",
+    "PL": "Narodowy Bank Polski",
+    "RO": "National Bank of Romania",
+    "RS": "National Bank of Serbia",
+    "RU": "Bank of Russia",
+    "SA": "Saudi Central Bank",
+    "SE": "Sveriges Riksbank",
+    "TH": "Bank of Thailand",
+    "TR": "Central Bank of the Republic of Türkiye",
+    "US": "Board of Governors of the Federal Reserve System",
+    "ZA": "South African Reserve Bank",
+    "XM": "European Central Bank",
+}
+CENTRAL_BANK_DIRECTORY_URL = "https://www.bis.org/about/organisation/members.htm"
+
 
 def country_from_iso2(code):
     code = str(code).strip().upper()
@@ -96,6 +141,9 @@ def world_bank(indicator, rate_type):
             rows.append({
                 "country": canonical_name,
                 "source_country_name": source_country_name,
+                "monetary_authority_name": None,
+                "monetary_authority_source_url": None,
+                "institution_name_note": "Country-level aggregate indicator; not attributable to one named commercial bank.",
                 "entity_type": "country",
                 "country_code": iso2,
                 "iso3": iso3,
@@ -164,10 +212,18 @@ def bis_policy():
         iso2 = str(x[cc]).strip().upper()
         country_name, iso3 = country_from_iso2(iso2)
         is_country = iso3 is not None
+        if iso2 not in CENTRAL_BANKS:
+            raise RuntimeError(
+                f"No verified monetary-authority name mapping for BIS reference area {iso2}; "
+                "add a sourced mapping rather than guessing."
+            )
         rows.append({
             "country": country_name,
             "source_country_name": country_name,
             "entity_type": "country" if is_country else "region",
+            "monetary_authority_name": CENTRAL_BANKS[iso2],
+            "monetary_authority_source_url": CENTRAL_BANK_DIRECTORY_URL,
+            "institution_name_note": "BIS policy-rate reference area monetary authority.",
             "country_code": iso2 if is_country else None,
             "iso3": iso3,
             "observation_date": period_start.strftime("%Y-%m-01"),
