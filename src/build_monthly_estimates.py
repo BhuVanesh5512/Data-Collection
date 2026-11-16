@@ -6,7 +6,6 @@ published annual observations and never extrapolates beyond available anchors.
 from datetime import datetime, timezone
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 SOURCE = Path("data/processed/global_bank_interest_rates.csv")
@@ -75,6 +74,7 @@ def main():
                         "source_name": "Derived estimate from World Bank WDI annual observations",
                         "source_retrieved_at": generated_at,
                         "is_estimated": True,
+                        "observation_status": "estimated_monthly_value",
                         "estimation_method": "Linear interpolation between annual mid-year anchors",
                         "anchor_start_year": y0,
                         "anchor_end_year": y1,
