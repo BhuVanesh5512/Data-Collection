@@ -1,0 +1,18 @@
+{
+  "verified_at_utc": "2026-11-16T18:15:36+00:00",
+  "requested_start": "2023-12-01",
+  "requested_end": "2026-11-16",
+  "dataset_rows": 1872,
+  "fresh_official_source_observations": 1872,
+  "matched_values": 1872,
+  "value_mismatches": 0,
+  "missing_source_observations_in_dataset": 0,
+  "dataset_observations_not_found_in_fresh_source": 0,
+  "duplicate_dataset_keys": 0,
+  "verification_passed": true,
+  "sources": {
+    "BIS": "https://stats.bis.org/api/v1/data/WS_CBPOL/M.",
+    "World Bank lending": "https://api.worldbank.org/v2/country/all/indicator/FR.INR.LEND",
+    "World Bank deposit": "https://api.worldbank.org/v2/country/all/indicator/FR.INR.DPST"
+  }
+}
