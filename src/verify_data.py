@@ -105,6 +105,19 @@ def fetch_rbi():
                 if "marginalstandingfacility" in k or k in {"msf", "msfrate"}), None),
         }
         cols = {code: col for code, col in cols.items() if col is not None}
+        if not cols and len(table.columns) >= 7:
+            positions = {
+                "RBI_POLICY_BANK_RATE": 1,
+                "RBI_POLICY_REPO": 3,
+                "RBI_POLICY_REVERSE_REPO": 4,
+                "RBI_POLICY_SDF": 5,
+                "RBI_POLICY_MSF": 6,
+            }
+            cols = {
+                code: table.columns[pos]
+                for code, pos in positions.items()
+                if pos < len(table.columns)
+            }
         if not cols:
             continue
         for _, row in table.iterrows():
