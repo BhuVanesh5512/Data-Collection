@@ -52,6 +52,30 @@ CENTRAL_BANKS = {
     "TH": "Bank of Thailand", "TR": "Central Bank of the Republic of Türkiye",
     "US": "Board of Governors of the Federal Reserve System",
     "ZA": "South African Reserve Bank", "XM": "European Central Bank",
+    # Additional BIS euro-area reference areas and other possible policy-rate
+    # areas. Names follow the BIS member-central-bank directory.
+    "AT": "Central Bank of the Republic of Austria",
+    "BE": "National Bank of Belgium",
+    "DE": "Deutsche Bundesbank",
+    "EE": "Bank of Estonia",
+    "ES": "Bank of Spain",
+    "FI": "Bank of Finland",
+    "FR": "Bank of France",
+    "GR": "Bank of Greece",
+    "IE": "Central Bank of Ireland",
+    "IT": "Bank of Italy",
+    "LT": "Bank of Lithuania",
+    "LU": "Central Bank of Luxembourg",
+    "LV": "Bank of Latvia",
+    "NL": "De Nederlandsche Bank",
+    "PT": "Banco de Portugal",
+    "SI": "Bank of Slovenia",
+    "SK": "National Bank of Slovakia",
+    "BA": "Central Bank of Bosnia and Herzegovina",
+    "BG": "Bulgarian National Bank",
+    "SG": "Monetary Authority of Singapore",
+    "AE": "Central Bank of the United Arab Emirates",
+    "VN": "State Bank of Viet Nam",
 }
 BIS_URL = "https://stats.bis.org/api/v1/data/WS_CBPOL/M."
 BIS_INFO_URL = "https://data.bis.org/topics/CBPOL"
