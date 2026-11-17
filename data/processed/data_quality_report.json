@@ -248,20 +248,12 @@
       "authority_name": "Reserve Bank of India"
     },
     {
-      "country": "North Macedonia",
+      "country": "Peru",
       "entity_type": "country",
       "reference_period": "2026-10",
       "interest_rate": 4.25,
       "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "National Bank of the Republic of North Macedonia"
-    },
-    {
-      "country": "Mexico",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 6.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank of Mexico"
+      "authority_name": "Central Reserve Bank of Peru"
     },
     {
       "country": "New Zealand",
@@ -272,204 +264,12 @@
       "authority_name": "Reserve Bank of New Zealand"
     },
     {
-      "country": "Philippines",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 5.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bangko Sentral ng Pilipinas"
-    },
-    {
-      "country": "Japan",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 1.25,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank of Japan"
-    },
-    {
-      "country": "Romania",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 6.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "National Bank of Romania"
-    },
-    {
-      "country": "Indonesia",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 5.75,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank Indonesia"
-    },
-    {
-      "country": "Chile",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 4.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Central Bank of Chile"
-    },
-    {
-      "country": "Poland",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 3.75,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Narodowy Bank Polski"
-    },
-    {
-      "country": "Sweden",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 1.75,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Sveriges Riksbank"
-    },
-    {
-      "country": "Hong Kong",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 4.25,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Hong Kong Monetary Authority"
-    },
-    {
-      "country": "Hungary",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 5.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Magyar Nemzeti Bank"
-    },
-    {
-      "country": "Russian Federation",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 14.0,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank of Russia"
-    },
-    {
-      "country": "Iceland",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 8.0,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Central Bank of Iceland"
-    },
-    {
-      "country": "Australia",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 4.6,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Reserve Bank of Australia"
-    },
-    {
-      "country": "United States",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 3.875,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Board of Governors of the Federal Reserve System"
-    },
-    {
-      "country": "Denmark",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 2.1,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Danmarks Nationalbank"
-    },
-    {
-      "country": "China",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 3.0,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "People's Bank of China"
-    },
-    {
-      "country": "Switzerland",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 0.0,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Swiss National Bank"
-    },
-    {
-      "country": "Czechia",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 3.75,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Czech National Bank"
-    },
-    {
-      "country": "Canada",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 2.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank of Canada"
-    },
-    {
-      "country": "Kuwait",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 3.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Central Bank of Kuwait"
-    },
-    {
-      "country": "Norway",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 4.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Norges Bank"
-    },
-    {
-      "country": "Brazil",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 13.75,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Central Bank of Brazil"
-    },
-    {
       "country": "Thailand",
       "entity_type": "country",
       "reference_period": "2026-10",
       "interest_rate": 1.0,
       "rate_name": "BIS selected central bank policy rate",
       "authority_name": "Bank of Thailand"
-    },
-    {
-      "country": "T\u00fcrkiye",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 36.0,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Central Bank of the Republic of T\u00fcrkiye"
-    },
-    {
-      "country": "Korea, Republic of",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 3.0,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank of Korea"
-    },
-    {
-      "country": "Peru",
-      "entity_type": "country",
-      "reference_period": "2026-10",
-      "interest_rate": 4.25,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Central Reserve Bank of Peru"
     },
     {
       "country": "Israel",
@@ -480,36 +280,28 @@
       "authority_name": "Bank of Israel"
     },
     {
-      "country": "Malaysia",
+      "country": "Japan",
       "entity_type": "country",
       "reference_period": "2026-10",
-      "interest_rate": 2.75,
+      "interest_rate": 1.25,
       "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank Negara Malaysia"
+      "authority_name": "Bank of Japan"
     },
     {
-      "country": "Colombia",
+      "country": "T\u00fcrkiye",
       "entity_type": "country",
       "reference_period": "2026-10",
-      "interest_rate": 12.25,
+      "interest_rate": 36.0,
       "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "Bank of the Republic (Banco de la Rep\u00fablica)"
+      "authority_name": "Central Bank of the Republic of T\u00fcrkiye"
     },
     {
-      "country": "Euro area",
-      "entity_type": "region",
-      "reference_period": "2026-10",
-      "interest_rate": 2.5,
-      "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "European Central Bank"
-    },
-    {
-      "country": "Serbia",
+      "country": "Indonesia",
       "entity_type": "country",
       "reference_period": "2026-10",
       "interest_rate": 5.75,
       "rate_name": "BIS selected central bank policy rate",
-      "authority_name": "National Bank of Serbia"
+      "authority_name": "Bank Indonesia"
     },
     {
       "country": "South Africa",
@@ -520,12 +312,518 @@
       "authority_name": "South African Reserve Bank"
     },
     {
+      "country": "Brazil",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 13.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Brazil"
+    },
+    {
+      "country": "Australia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.6,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Reserve Bank of Australia"
+    },
+    {
+      "country": "Sweden",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 1.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Sveriges Riksbank"
+    },
+    {
+      "country": "Kuwait",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Kuwait"
+    },
+    {
+      "country": "Korea, Republic of",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Korea"
+    },
+    {
+      "country": "Malaysia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank Negara Malaysia"
+    },
+    {
+      "country": "Mexico",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 6.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Mexico"
+    },
+    {
+      "country": "Colombia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 12.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of the Republic (Banco de la Rep\u00fablica)"
+    },
+    {
       "country": "United Kingdom",
       "entity_type": "country",
       "reference_period": "2026-10",
       "interest_rate": 3.75,
       "rate_name": "BIS selected central bank policy rate",
       "authority_name": "Bank of England"
+    },
+    {
+      "country": "Russian Federation",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 14.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Russia"
+    },
+    {
+      "country": "Romania",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 6.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "National Bank of Romania"
+    },
+    {
+      "country": "Czechia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Czech National Bank"
+    },
+    {
+      "country": "Poland",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Narodowy Bank Polski"
+    },
+    {
+      "country": "Denmark",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.1,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Danmarks Nationalbank"
+    },
+    {
+      "country": "Philippines",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bangko Sentral ng Pilipinas"
+    },
+    {
+      "country": "Norway",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Norges Bank"
+    },
+    {
+      "country": "Hungary",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Magyar Nemzeti Bank"
+    },
+    {
+      "country": "North Macedonia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "National Bank of the Republic of North Macedonia"
+    },
+    {
+      "country": "Iceland",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 8.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Iceland"
+    },
+    {
+      "country": "Hong Kong",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Hong Kong Monetary Authority"
+    },
+    {
+      "country": "Euro area",
+      "entity_type": "region",
+      "reference_period": "2026-10",
+      "interest_rate": 2.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "European Central Bank"
+    },
+    {
+      "country": "Chile",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Chile"
+    },
+    {
+      "country": "Canada",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Canada"
+    },
+    {
+      "country": "Switzerland",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 0.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Swiss National Bank"
+    },
+    {
+      "country": "China",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "People's Bank of China"
+    },
+    {
+      "country": "Serbia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "National Bank of Serbia"
+    },
+    {
+      "country": "United States",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.875,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Board of Governors of the Federal Reserve System"
+    }
+  ],
+  "latest_rates_within_one_month_of_dataset_end": [
+    {
+      "country": "T\u00fcrkiye",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 36.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of the Republic of T\u00fcrkiye"
+    },
+    {
+      "country": "Russian Federation",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 14.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Russia"
+    },
+    {
+      "country": "Brazil",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 13.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Brazil"
+    },
+    {
+      "country": "Colombia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 12.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of the Republic (Banco de la Rep\u00fablica)"
+    },
+    {
+      "country": "Iceland",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 8.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Iceland"
+    },
+    {
+      "country": "South Africa",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 7.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "South African Reserve Bank"
+    },
+    {
+      "country": "Romania",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 6.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "National Bank of Romania"
+    },
+    {
+      "country": "Mexico",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 6.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Mexico"
+    },
+    {
+      "country": "Serbia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "National Bank of Serbia"
+    },
+    {
+      "country": "Indonesia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank Indonesia"
+    },
+    {
+      "country": "Philippines",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bangko Sentral ng Pilipinas"
+    },
+    {
+      "country": "Hungary",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 5.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Magyar Nemzeti Bank"
+    },
+    {
+      "country": "India",
+      "entity_type": "country",
+      "reference_period": "2026-09",
+      "interest_rate": 5.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Reserve Bank of India"
+    },
+    {
+      "country": "Australia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.6,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Reserve Bank of Australia"
+    },
+    {
+      "country": "Chile",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Chile"
+    },
+    {
+      "country": "Norway",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Norges Bank"
+    },
+    {
+      "country": "Saudi Arabia",
+      "entity_type": "country",
+      "reference_period": "2026-09",
+      "interest_rate": 4.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Saudi Central Bank"
+    },
+    {
+      "country": "Hong Kong",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Hong Kong Monetary Authority"
+    },
+    {
+      "country": "North Macedonia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "National Bank of the Republic of North Macedonia"
+    },
+    {
+      "country": "Peru",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 4.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Reserve Bank of Peru"
+    },
+    {
+      "country": "United States",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.875,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Board of Governors of the Federal Reserve System"
+    },
+    {
+      "country": "United Kingdom",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of England"
+    },
+    {
+      "country": "Czechia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Czech National Bank"
+    },
+    {
+      "country": "Poland",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Narodowy Bank Polski"
+    },
+    {
+      "country": "Kuwait",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Central Bank of Kuwait"
+    },
+    {
+      "country": "Israel",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Israel"
+    },
+    {
+      "country": "Korea, Republic of",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Korea"
+    },
+    {
+      "country": "China",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 3.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "People's Bank of China"
+    },
+    {
+      "country": "New Zealand",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Reserve Bank of New Zealand"
+    },
+    {
+      "country": "Malaysia",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank Negara Malaysia"
+    },
+    {
+      "country": "Canada",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Canada"
+    },
+    {
+      "country": "Euro area",
+      "entity_type": "region",
+      "reference_period": "2026-10",
+      "interest_rate": 2.5,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "European Central Bank"
+    },
+    {
+      "country": "Denmark",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 2.1,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Danmarks Nationalbank"
+    },
+    {
+      "country": "Sweden",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 1.75,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Sveriges Riksbank"
+    },
+    {
+      "country": "Japan",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 1.25,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Japan"
+    },
+    {
+      "country": "Thailand",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 1.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Bank of Thailand"
+    },
+    {
+      "country": "Switzerland",
+      "entity_type": "country",
+      "reference_period": "2026-10",
+      "interest_rate": 0.0,
+      "rate_name": "BIS selected central bank policy rate",
+      "authority_name": "Swiss National Bank"
     }
   ]
 }

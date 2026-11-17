@@ -15,12 +15,12 @@
 - 48 observations are negative. Negative policy rates are retained as published, not treated as missing or errors.
 - 23 observations exceed 50%; these are flagged for contextual review, not automatically rejected.
 
-### Highest latest published observations
+### Highest latest observations (within one month of the dataset end)
 - Türkiye — 36.000% (2026-10); Central Bank of the Republic of Türkiye.
-- Argentina — 29.000% (2025-06); Central Bank of Argentina.
 - Russian Federation — 14.000% (2026-10); Bank of Russia.
 - Brazil — 13.750% (2026-10); Central Bank of Brazil.
 - Colombia — 12.250% (2026-10); Bank of the Republic (Banco de la República).
+- Iceland — 8.000% (2026-10); Central Bank of Iceland.
 
 ### Largest increases among fully covered series
 - Türkiye: +21.00 percentage points from 15.000% to 36.000%.
@@ -31,10 +31,6 @@
 
 ### Largest decreases among fully covered series
 - China: -0.85 percentage points from 3.850% to 3.000%.
-- Thailand: +0.50 percentage points from 0.500% to 1.000%.
-- Switzerland: +0.75 percentage points from -0.750% to 0.000%.
-- Czechia: +1.00 percentage points from 2.750% to 3.750%.
-- Malaysia: +1.00 percentage points from 1.750% to 2.750%.
 
 ### Coverage exceptions
 - Croatia: 3 observations, 5.0% coverage, latest 2022-07.
