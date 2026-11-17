@@ -1,27 +1,61 @@
-# Global Bank Interest Rates Dataset
+# Global Financial-Authority Interest Rates
 
-Automated collection of official global interest-rate statistics using GitHub Actions.
+This repository collects **published interest-rate observations from official monetary and financial authorities**. It is not a stock-market or shares dataset.
 
-## Coverage and sources
-- **Central bank policy rates:** Bank for International Settlements (BIS) Central Bank Policy Rates, topic CBPOL. BIS documents long series for more than 40 advanced and emerging market economies, at daily and monthly frequency. Monthly observations are month-end values derived from daily data. [BIS CBPOL overview](https://data.bis.org/topics/CBPOL) · [BIS data documentation](https://www.bis.org/pages/statistics/cbpol-doc.pdf) · [BIS SDMX API](https://stats.bis.org/api-doc/v2/)
-- **Lending rates:** World Bank WDI indicator `FR.INR.LEND`. [Indicator page](https://data.worldbank.org/indicator/FR.INR.LEND)
-- **Deposit rates:** World Bank WDI indicator `FR.INR.DPST`. [Indicator page](https://data.worldbank.org/indicator/FR.INR.DPST)
-- **World Bank API documentation:** https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation
+## Scope
 
-## Date window
-The workflow requests observations from 2023-12-01 through the current run date. The end date is calculated at runtime rather than hard-coded, so scheduled monthly runs continue to advance. The latest period available depends on each source's publication schedule.
+- **Rolling five-year window:** the workflow calculates the start date as the run date minus five calendar years. This satisfies the requested minimum three years and uses the maximum five-year window where source history is available.
+- **International policy rates:** BIS Central Bank Policy Rates (CBPOL), monthly end-of-period observations for the economies covered by BIS.
+- **India policy-rate instruments:** Reserve Bank of India (RBI) Table 40 effective-date observations for Bank Rate, Policy Repo Rate, Fixed Reverse Repo Rate, Standing Deposit Facility (SDF) Rate and Marginal Standing Facility (MSF) Rate.
+- Only source-published observations are included. No linear interpolation, extrapolation, synthetic rows, share prices, equity returns, or stock-market indicators are collected.
+
+## Official sources
+
+- BIS CBPOL overview: https://data.bis.org/topics/CBPOL
+- BIS CBPOL documentation: https://www.bis.org/pages/statistics/cbpol-doc.pdf
+- RBI Table 40, Major Monetary Policy Rates and Reserve Requirements: https://www.rbi.org.in/Scripts/PublicationsView.aspx?id=23865
+- RBI DBIE portal: https://data.rbi.org.in/
+
+BIS says its policy-rate series are selected in collaboration with the participating central banks, cover more than 40 advanced and emerging market economies, and are disseminated daily and monthly. Monthly observations are the value on the last business day of the month. RBI's Table 40 publishes effective-date changes in India's key monetary policy rates.
+
+## Authority and bank-name fields
+
+- `authority_name` is the official financial/monetary authority publishing or supplying the rate.
+- `bank_name` is retained for compatibility with the earlier project schema and is set equal to `authority_name`. It is not a commercial-bank name unless a source explicitly identifies a commercial bank.
+- For India, the authority is **Reserve Bank of India**.
+- For BIS reference areas, the authority name is mapped to the corresponding central bank or monetary authority. Unknown BIS reference-area codes cause collection to fail instead of receiving a guessed name.
+- `bank_name_status` indicates that the authority name is identified.
 
 ## Output
-`data/processed/global_bank_interest_rates.csv` is an observation-level dataset with canonical country/region name, original source country label, entity type (country or region), ISO-2 and ISO-3 codes where applicable, observation date, year, month, rate type, rate, frequency, `bank_name`, `bank_name_status`, institution name/type, source, series code, source URL, and retrieval metadata. BIS policy-rate rows identify the monetary authority (central bank) in `bank_name`. World Bank lending/deposit rows are national banking-sector aggregates, so `bank_name` is intentionally blank and `bank_name_status` is `not_identified_by_source`; these indicators do not identify an individual commercial bank. Annual World Bank values use 1 January as a period label and have a blank month; monthly BIS values use the first day as the month label and retain the month number. Do not interpret these date labels as the exact day the rate changed.
 
-## Monthly estimated panel
-`data/processed/global_bank_interest_rates_monthly_estimates.csv` is a separate analytical convenience file. It contains clearly flagged monthly estimates for World Bank annual lending/deposit observations, using linear interpolation between annual values anchored at 1 July. It only interpolates between two observed annual values and does not extrapolate before the first or after the last anchor. Each estimated row includes `is_estimated`, `estimation_method`, anchor years, and anchor values. These rows are not official monthly observations and must not be mixed with the official CSV without filtering or labelling.
+Primary file: `data/processed/global_bank_interest_rates.csv`
 
-## Important limitations
-BIS policy rates cover more than 40 economies, not 100+. World Bank lending/deposit indicators have broader country coverage but are annual. Consequently, 100+ countries and 1,000+ official observations are targets to assess against real source data, not guaranteed outcomes. The official CSV preserves source frequency. The separate estimated panel is for analysis only and does not turn annual source data into observed monthly data. Bank policy-rate records identify the monetary authority; World Bank lending/deposit indicators are country-level aggregates and cannot reliably be attributed to one named commercial bank. If an upstream API changes its schema, the workflow should fail visibly rather than silently generate incomplete data.
+Important columns include:
+- Geography: `country`, `country_code`, `iso3`, `entity_type`
+- Authority: `authority_name`, `bank_name`, `bank_name_status`, `institution_name`, `institution_type`
+- Rate: `rate_type`, `rate_name`, `interest_rate`, `units`
+- Time: `observation_date`, `year`, `month`, `reference_period`, `frequency`
+- Provenance: `source_name`, `source_url`, `series_code`, `rate_definition`, `source_retrieved_at`
+- Quality: `is_estimated`, `observation_status`, `methodology_notes`
 
-## Run
-Open **Actions → Collect and verify global bank interest rates → Run workflow**. A monthly scheduled run is configured. The workflow collects official observations, independently verifies each official value against the source APIs, builds the separate estimated monthly panel, and commits the CSVs and verification reports only if collection and verification succeed.
+BIS observations use `frequency=monthly` and month-end reference periods. RBI observations use `frequency=event` and the source's effective date. These frequencies must remain distinct in analysis. The rate instrument is identified by `rate_name` and `series_code`; do not combine different instruments as though they were one rate.
+
+## Verification
+
+Each workflow run independently downloads the current BIS and RBI source tables again and compares every dataset value against the official source. It writes:
+- `data/processed/source_verification.csv`
+- `data/processed/source_verification_summary.json`
+
+The workflow fails if any observation cannot be matched, a value differs, an authority name is missing, an estimated row is present, or duplicate logical observations are found. Verification checks exact source values; it does not claim that all countries publish comparable policy instruments.
+
+## Coverage limitations
+
+BIS CBPOL currently covers more than 40 economies, not every country. RBI adds several official Indian policy-rate instruments. The total number of rows and countries therefore depends on actual source coverage and available observations. A target such as 1,000 rows is not met by generating or interpolating data; if genuine source coverage is below the target, the workflow reports the real count.
+
+## Automation
+
+GitHub Actions can be run manually from **Actions → Collect and verify global financial-authority interest rates → Run workflow**. It is also scheduled monthly. The workflow collects, independently verifies, and commits only the official-observation CSV and audit reports.
 
 ## Attribution
-Retain the original source references in the CSV. BIS statistics are subject to [BIS terms and citation guidance](https://data.bis.org/help/export). World Bank indicators should be attributed to the World Bank. This repository is not affiliated with or endorsed by either institution.
+
+Retain the source URLs and metadata in every analysis. Follow BIS permitted-use guidance: https://data.bis.org/help/legal. RBI data should be attributed to the Reserve Bank of India. This repository is not affiliated with or endorsed by either authority.
