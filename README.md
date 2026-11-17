@@ -45,6 +45,11 @@ BIS observations use `frequency=monthly` and month-end reference periods. RBI ob
 Each workflow run independently downloads the BIS source and attempts to re-read RBI Table 40. It compares every collected dataset value against the matching official source. The verification summary explicitly reports how many RBI observations were available; when RBI's HTML table cannot be parsed, only BIS observations are verified and the limitation is recorded. It writes:
 - `data/processed/source_verification.csv`
 - `data/processed/source_verification_summary.json`
+- `data/processed/analysis_ready_rates.csv`: analysis features added without changing the original observations (consecutive month changes, previous observation change, 12-month rolling mean/standard deviation, latest-observation flags, and review flags for large changes/high values).
+- `data/processed/country_series_summary.csv`: per-country/region series statistics, latest observation, first-to-latest change, missing months, and coverage status.
+- `data/processed/monthly_cross_section_summary.csv`: month-by-month median, mean, quartiles, min/max and balanced-panel median.
+- `data/processed/data_quality_report.json`: verification status, coverage exceptions, latest observations, negative values and high-rate review records.
+- `data/processed/analysis_insights.md`: automatically generated findings and interpretation cautions.
 
 The workflow fails if any observation cannot be matched, a value differs, an authority name is missing, an estimated row is present, or duplicate logical observations are found. Verification checks exact source values; it does not claim that all countries publish comparable policy instruments.
 
@@ -59,3 +64,34 @@ GitHub Actions can be run manually from **Actions → Collect and verify global 
 ## Attribution
 
 Retain the source URLs and metadata in every analysis. Follow BIS permitted-use guidance: https://data.bis.org/help/legal. RBI data should be attributed to the Reserve Bank of India. This repository is not affiliated with or endorsed by either authority.
+
+
+## Column guide and analysis use
+
+### Core columns in the official observation file
+- `observation_id`: row identifier for this exported file; not a source-issued ID.
+- `country`, `source_country_name`, `country_code`, `iso3`, `entity_type`: geography and whether the observation is a country or a regional reference area. Euro area is a regional aggregate and has no ISO3 country code.
+- `bank_name`, `authority_name`, `monetary_authority_name`: mapped monetary authority. In this policy-rate extract these fields identify the central bank/authority, not a commercial bank.
+- `bank_name_status`, `institution_type`, `institution_name_note`: authority-identification status and institution classification/context.
+- `observation_date`, `year`, `month`, `reference_period`: date keys. For BIS monthly data, `reference_period` is YYYY-MM and `observation_date` is represented as the first day of that month; it is not a daily effective date.
+- `interest_rate`, `units`: published rate value and unit (percent per year).
+- `rate_type`, `rate_name`, `series_code`, `series_name`, `rate_definition`: rate family, instrument label, source-series identifier and definition. Use these fields to avoid comparing unlike policy instruments.
+- `frequency`, `original_frequency`: frequency in this extract and source frequency. BIS observations are monthly.
+- `source_name`, `source_url`, `monetary_authority_source_url`, `source_retrieved_at`: provenance and collection timestamp.
+- `is_estimated`, `observation_status`, `estimation_method`, `methodology_notes`: whether the observation is source-published and explanatory processing notes. Official-only rows should have `is_estimated=False`.
+- `collection_window_start`: start date used by the collector for this export.
+
+### Best fields for common analyses
+- Trend line: `reference_period` on the x-axis, `interest_rate` on the y-axis, filtered to one `series_code` or `rate_name`.
+- Country comparison: compare the latest available observation per series, but display its `reference_period` and coverage status.
+- Authority comparison: `authority_name` with `interest_rate`; use one comparable rate instrument.
+- Change analysis: use `analysis_ready_rates.csv` and `change_from_previous_month_pp`. This field is blank when observations are not consecutive months.
+- Volatility: use `rolling_12m_std` or country summary `standard_deviation_pp`; interpret only with enough consecutive observations.
+- Coverage: use `country_series_summary.csv` fields `coverage_pct`, `missing_months_in_window`, `months_behind_latest_dataset_period`, and `coverage_status`.
+
+### Interpretation cautions
+- Cross-sectional mean/median are descriptive summaries of the available authority series, not an economically weighted global interest rate.
+- The balanced-panel median compares the same complete series over time and reduces changes caused solely by entities entering/leaving the dataset.
+- Very high rates are retained if they match the source. They are flagged for context rather than automatically treated as errors.
+- Negative rates are valid observations when published by the authority.
+- A policy rate is not the same as commercial lending, deposit, mortgage or credit-card rates.
