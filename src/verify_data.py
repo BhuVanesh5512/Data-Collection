@@ -118,6 +118,13 @@ def main():
     if not DATA_PATH.exists():
         raise FileNotFoundError(DATA_PATH)
     data = pd.read_csv(DATA_PATH)
+    global START
+    if "collection_window_start" not in data.columns:
+        raise RuntimeError("Dataset is missing collection_window_start; recollect with the current collector.")
+    starts = data["collection_window_start"].dropna().astype(str).unique()
+    if len(starts) != 1:
+        raise RuntimeError(f"Expected one collection window start, found: {starts.tolist()}")
+    START = starts[0]
     required = {
         "authority_name", "bank_name", "rate_name", "observation_date",
         "interest_rate", "frequency", "series_code", "reference_period",
@@ -131,9 +138,18 @@ def main():
     if data["is_estimated"].astype(str).str.lower().isin(["true", "1", "yes"]).any():
         raise RuntimeError("Estimated records found in the official-only dataset.")
 
-    expected = {}
-    expected.update(fetch_bis())
-    expected.update(fetch_rbi())
+    expected_all = {}
+    expected_all.update(fetch_bis())
+    expected_all.update(fetch_rbi())
+
+    # Verify all rows present in the dataset. BIS also exposes some series
+    # outside the collector's mapped authority set; these are not silently
+    # treated as collected records.
+    included_series = set(data["series_code"].astype(str))
+    expected = {
+        key: value for key, value in expected_all.items()
+        if key[0] in included_series
+    }
 
     dataset = {}
     duplicate_keys = []
@@ -185,6 +201,7 @@ def main():
         "requested_start": START, "requested_end": END,
         "dataset_rows": int(len(data)),
         "fresh_official_source_observations": int(len(expected)),
+        "all_source_observations_available_for_included_series": int(len(expected_all)),
         "matched_values": int(matched), "value_mismatches": int(mismatched),
         "missing_source_observations_in_dataset": int(missing_source),
         "dataset_observations_not_found_in_fresh_source": int(extra_dataset),
