@@ -15,6 +15,7 @@ TODAY = pd.Timestamp.today().normalize()
 START = os.getenv("START_DATE", (TODAY - pd.DateOffset(years=5)).date().isoformat())
 END = os.getenv("END_DATE", date.today().isoformat())
 OUT = Path("data/processed/global_bank_interest_rates.csv")
+MAX_HISTORY_YEARS = int(os.getenv("MAX_HISTORY_YEARS", "30"))
 NOW = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 S = requests.Session()
@@ -267,7 +268,7 @@ def main():
     explicit_start = bool(os.getenv("START_DATE"))
     requested_start = START
     window_start = START
-    max_history_years = 30
+    max_history_years = MAX_HISTORY_YEARS
     while True:
         START = window_start
         frames = [bis_policy(), rbi_policy_rates()]
