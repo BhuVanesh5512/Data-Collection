@@ -173,10 +173,11 @@ def rbi_policy_rates():
         selected, date_col, rate_cols = table, dc, found
         break
     if selected is None:
-        raise RuntimeError(
-            "Could not identify RBI Table 40 columns (effective date, Bank Rate, "
-            "Repo, Reverse Repo, SDF, MSF). RBI page layout may have changed."
+        print(
+            "WARNING: RBI Table 40 could not be parsed. Keeping all BIS official "
+            "policy-rate observations; no RBI values will be invented."
         )
+        return pd.DataFrame()
 
     labels = {
         "RBI_POLICY_BANK_RATE": "Bank Rate",
@@ -221,7 +222,11 @@ def rbi_policy_rates():
                 ),
             })
     if not rows:
-        raise RuntimeError("RBI source parsed but produced no in-window policy-rate observations.")
+        print(
+            "WARNING: RBI Table 40 produced no parseable observations in the "
+            "selected window. Keeping BIS observations only for this run."
+        )
+        return pd.DataFrame()
     return pd.DataFrame(rows)
 
 
