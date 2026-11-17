@@ -310,9 +310,22 @@ def main():
             "country", "observation_date", "interest_rate", "rate_type",
             "authority_name", "bank_name", "rate_name", "source_url",
         ])
-        candidate = candidate[
-            candidate["observation_date"].between(pd.Timestamp(START), pd.Timestamp(END))
-        ].copy()
+        monthly_mask = candidate["frequency"].eq("monthly")
+        monthly_starts = pd.to_datetime(
+            candidate["reference_period"].where(monthly_mask).astype("string") + "-01",
+            format="%Y-%m-%d", errors="coerce",
+        )
+        monthly_ends = monthly_starts + pd.offsets.MonthEnd(0)
+        keep_monthly = (
+            monthly_mask
+            & monthly_ends.ge(pd.Timestamp(START))
+            & monthly_starts.le(pd.Timestamp(END))
+        )
+        keep_event = (
+            ~monthly_mask
+            & candidate["observation_date"].between(pd.Timestamp(START), pd.Timestamp(END))
+        )
+        candidate = candidate[keep_monthly | keep_event].copy()
         if len(candidate) >= 1000 or explicit_start:
             data = candidate
             break
@@ -349,7 +362,7 @@ def main():
     print(f"Collection window: {window_start} to {END}")
     print(f"Rows: {len(data):,}; countries: {countries:,}")
     print(data.groupby(["source_name", "rate_name", "frequency"], dropna=False).size().to_string())
-    print(f"India official RBI rows: {len(india):,}")
+    print(f"India official policy-rate rows: {len(india):,}")
     print(f"Authorities: {data['authority_name'].nunique():,}")
     if len(data) < 1000:
         print(
