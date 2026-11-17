@@ -6,6 +6,7 @@ on:
     paths:
       - "src/collect_data.py"
       - "src/verify_data.py"
+      - "src/analyze_dataset.py"
       - "src/build_monthly_estimates.py"
       - ".github/workflows/collect_data.yml"
       - "requirements.txt"
@@ -36,12 +37,19 @@ jobs:
         run: python src/collect_data.py
       - name: Independently verify every rate against fresh official sources
         run: python src/verify_data.py
-      - name: Commit verified official dataset and audit reports
+      - name: Generate analysis features, coverage and insights
+        run: python src/analyze_dataset.py
+      - name: Commit verified official dataset, audit and analysis reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/processed/global_bank_interest_rates.csv
           git add data/processed/source_verification.csv
           git add data/processed/source_verification_summary.json
+          git add data/processed/analysis_ready_rates.csv
+          git add data/processed/country_series_summary.csv
+          git add data/processed/monthly_cross_section_summary.csv
+          git add data/processed/data_quality_report.json
+          git add data/processed/analysis_insights.md
           git diff --cached --quiet || git commit -m "Update verified official financial authority rates"
           git push
