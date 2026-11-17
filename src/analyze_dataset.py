@@ -170,13 +170,17 @@ def main():
         "coverage_exceptions": country.loc[country["coverage_status"] != "complete", ["country", "latest_period", "observations", "coverage_pct", "months_behind_latest_dataset_period"]].to_dict("records"),
         "high_rate_review_records": high_values.to_dict("records"),
         "latest_rates_by_series": latest_rows[["country", "entity_type", "reference_period", "interest_rate", "rate_name", "authority_name"]].to_dict("records"),
+        "latest_rates_within_one_month_of_dataset_end": latest_recent[["country", "entity_type", "reference_period", "interest_rate", "rate_name", "authority_name"]].to_dict("records"),
     }
     QUALITY.write_text(json.dumps(quality, indent=2, default=str), encoding="utf-8")
 
     latest_global = latest_rows.sort_values("interest_rate", ascending=False)
     complete = country[country["coverage_status"] == "complete"].sort_values("change_since_first_observation_pp")
     top_rise = complete.tail(5).sort_values("change_since_first_observation_pp", ascending=False)
-    top_fall = complete.head(5)
+    top_fall = complete[complete["change_since_first_observation_pp"] < 0].head(5)
+    latest_recent = latest_rows[
+        (last_period.ordinal - latest_rows["period"].astype("int64")) <= 1
+    ].sort_values("interest_rate", ascending=False)
     exceptions = country[country["coverage_status"] != "complete"].sort_values("coverage_pct")
     lines = [
         "# Dataset analysis and insights",
@@ -196,16 +200,19 @@ def main():
         f"- {negative_values} observations are negative. Negative policy rates are retained as published, not treated as missing or errors.",
         f"- {len(high_values)} observations exceed 50%; these are flagged for contextual review, not automatically rejected.",
         "",
-        "### Highest latest published observations",
+        "### Highest latest observations (within one month of the dataset end)",
     ]
-    for _, row in latest_global.head(5).iterrows():
+    for _, row in latest_recent.head(5).iterrows():
         lines.append(f"- {row['country']} — {row['interest_rate']:.3f}% ({row['reference_period']}); {row['authority_name']}.")
     lines += ["", "### Largest increases among fully covered series"]
     for _, row in top_rise.iterrows():
         lines.append(f"- {row['country']}: {row['change_since_first_observation_pp']:+.2f} percentage points from {row['first_rate_pct']:.3f}% to {row['latest_rate_pct']:.3f}%.")
     lines += ["", "### Largest decreases among fully covered series"]
-    for _, row in top_fall.iterrows():
-        lines.append(f"- {row['country']}: {row['change_since_first_observation_pp']:+.2f} percentage points from {row['first_rate_pct']:.3f}% to {row['latest_rate_pct']:.3f}%.")
+    if top_fall.empty:
+        lines.append("- No fully covered series decreased between its first and latest observation.")
+    else:
+        for _, row in top_fall.iterrows():
+            lines.append(f"- {row['country']}: {row['change_since_first_observation_pp']:+.2f} percentage points from {row['first_rate_pct']:.3f}% to {row['latest_rate_pct']:.3f}%.")
     lines += ["", "### Coverage exceptions"]
     if exceptions.empty:
         lines.append("- None.")
