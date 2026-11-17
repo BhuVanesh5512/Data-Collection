@@ -328,3 +328,7 @@ def main():
         )
     if countries < 40:
         print("NOTICE: Country coverage is limited to economies with supported official sources.")
+
+
+if __name__ == "__main__":
+    main()
