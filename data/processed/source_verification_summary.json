@@ -1,18 +1,21 @@
 {
-  "verified_at_utc": "2026-11-16T18:34:31+00:00",
-  "requested_start": "2023-12-01",
-  "requested_end": "2026-11-16",
-  "dataset_rows": 1872,
-  "fresh_official_source_observations": 1872,
-  "matched_values": 1872,
+  "verified_at_utc": "2026-11-17T13:28:14+00:00",
+  "requested_start": "2021-11-17",
+  "requested_end": "2026-11-17",
+  "dataset_rows": 2323,
+  "fresh_official_source_observations": 2323,
+  "all_source_observations_available_for_included_series": 2323,
+  "rbi_policy_observations_available_for_verification": 0,
+  "rbi_policy_rows_in_dataset": 0,
+  "matched_values": 2323,
   "value_mismatches": 0,
   "missing_source_observations_in_dataset": 0,
   "dataset_observations_not_found_in_fresh_source": 0,
   "duplicate_dataset_keys": 0,
+  "authority_names_present": true,
   "verification_passed": true,
   "sources": {
-    "BIS": "https://stats.bis.org/api/v1/data/WS_CBPOL/M.",
-    "World Bank lending": "https://api.worldbank.org/v2/country/all/indicator/FR.INR.LEND",
-    "World Bank deposit": "https://api.worldbank.org/v2/country/all/indicator/FR.INR.DPST"
+    "BIS": "https://data.bis.org/topics/CBPOL",
+    "RBI": "https://www.rbi.org.in/Scripts/PublicationsView.aspx?id=23865"
   }
 }
