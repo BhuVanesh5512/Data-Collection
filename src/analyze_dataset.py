@@ -139,6 +139,9 @@ def main():
     monthly.to_csv(MONTHLY_SUMMARY, index=False)
 
     latest_rows = raw.sort_values("period").groupby("series_code").tail(1)
+    latest_recent = latest_rows[
+        (last_period.ordinal - latest_rows["period"].astype("int64")) <= 1
+    ].sort_values("interest_rate", ascending=False)
     country_entities = raw.loc[raw["entity_type"].eq("country"), "iso3"].nunique()
     region_entities = raw.loc[raw["entity_type"].eq("region"), "country"].nunique()
     full_coverage = int((country["coverage_status"] == "complete").sum())
@@ -178,9 +181,6 @@ def main():
     complete = country[country["coverage_status"] == "complete"].sort_values("change_since_first_observation_pp")
     top_rise = complete.tail(5).sort_values("change_since_first_observation_pp", ascending=False)
     top_fall = complete[complete["change_since_first_observation_pp"] < 0].head(5)
-    latest_recent = latest_rows[
-        (last_period.ordinal - latest_rows["period"].astype("int64")) <= 1
-    ].sort_values("interest_rate", ascending=False)
     exceptions = country[country["coverage_status"] != "complete"].sort_values("coverage_pct")
     lines = [
         "# Dataset analysis and insights",
