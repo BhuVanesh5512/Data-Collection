@@ -1,4 +1,6 @@
+"""Collect official central-bank and financial-authority interest rates only."""
 import os
+import re
 from datetime import date, datetime, timezone
 from pathlib import Path
 import io
@@ -9,69 +11,51 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-START = os.getenv("START_DATE", "2023-12-01")
+TODAY = pd.Timestamp.today().normalize()
+START = os.getenv("START_DATE", (TODAY - pd.DateOffset(years=5)).date().isoformat())
 END = os.getenv("END_DATE", date.today().isoformat())
 OUT = Path("data/processed/global_bank_interest_rates.csv")
 NOW = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 S = requests.Session()
-S.headers["User-Agent"] = "Data-Collection-research/1.0"
+S.headers["User-Agent"] = "Data-Collection-official-rates-research/2.0"
 retry = Retry(
-    total=6, connect=6, read=6, status=6,
-    backoff_factor=2,
+    total=6, connect=6, read=6, status=6, backoff_factor=2,
     status_forcelist=(429, 500, 502, 503, 504),
     allowed_methods=frozenset(["GET"]),
     respect_retry_after_header=True,
 )
-adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
-S.mount("https://", adapter)
-S.mount("http://", adapter)
-REQUEST_TIMEOUT = (20, 240)
+S.mount("https://", HTTPAdapter(max_retries=retry))
+TIMEOUT = (20, 240)
 
-# Official monetary-authority names for BIS CBPOL reference areas.
-# Names are aligned to the BIS central-bank/member directory where listed.
+# Authority labels for BIS reference areas. Unknown areas fail closed; they are
+# never guessed from country names.
 CENTRAL_BANKS = {
-    "AR": "Central Bank of Argentina",
-    "AU": "Reserve Bank of Australia",
-    "BR": "Central Bank of Brazil",
-    "CA": "Bank of Canada",
-    "CH": "Swiss National Bank",
-    "CL": "Central Bank of Chile",
-    "CN": "People's Bank of China",
-    "CO": "Bank of the Republic (Banco de la República)",
-    "CZ": "Czech National Bank",
-    "DK": "Danmarks Nationalbank",
-    "GB": "Bank of England",
-    "HK": "Hong Kong Monetary Authority",
-    "HU": "Magyar Nemzeti Bank",
-    "ID": "Bank Indonesia",
-    "IL": "Bank of Israel",
-    "IN": "Reserve Bank of India",
-    "IS": "Central Bank of Iceland",
-    "JP": "Bank of Japan",
-    "KR": "Bank of Korea",
-    "KW": "Central Bank of Kuwait",
-    "MA": "Bank Al-Maghrib",
-    "MK": "National Bank of the Republic of North Macedonia",
-    "MX": "Bank of Mexico",
-    "MY": "Bank Negara Malaysia",
-    "NO": "Norges Bank",
-    "NZ": "Reserve Bank of New Zealand",
-    "PE": "Central Reserve Bank of Peru",
-    "PH": "Bangko Sentral ng Pilipinas",
-    "PL": "Narodowy Bank Polski",
-    "RO": "National Bank of Romania",
-    "RS": "National Bank of Serbia",
-    "RU": "Bank of Russia",
-    "SA": "Saudi Central Bank",
-    "SE": "Sveriges Riksbank",
-    "TH": "Bank of Thailand",
-    "TR": "Central Bank of the Republic of Türkiye",
+    "AR": "Central Bank of Argentina", "AU": "Reserve Bank of Australia",
+    "BR": "Central Bank of Brazil", "CA": "Bank of Canada",
+    "CH": "Swiss National Bank", "CL": "Central Bank of Chile",
+    "CN": "People's Bank of China", "CO": "Bank of the Republic (Banco de la República)",
+    "CZ": "Czech National Bank", "DK": "Danmarks Nationalbank",
+    "GB": "Bank of England", "HK": "Hong Kong Monetary Authority",
+    "HU": "Magyar Nemzeti Bank", "ID": "Bank Indonesia",
+    "IL": "Bank of Israel", "IN": "Reserve Bank of India",
+    "IS": "Central Bank of Iceland", "JP": "Bank of Japan",
+    "KR": "Bank of Korea", "KW": "Central Bank of Kuwait",
+    "MA": "Bank Al-Maghrib", "MK": "National Bank of the Republic of North Macedonia",
+    "MX": "Bank of Mexico", "MY": "Bank Negara Malaysia",
+    "NO": "Norges Bank", "NZ": "Reserve Bank of New Zealand",
+    "PE": "Central Reserve Bank of Peru", "PH": "Bangko Sentral ng Pilipinas",
+    "PL": "Narodowy Bank Polski", "RO": "National Bank of Romania",
+    "RS": "National Bank of Serbia", "RU": "Bank of Russia",
+    "SA": "Saudi Central Bank", "SE": "Sveriges Riksbank",
+    "TH": "Bank of Thailand", "TR": "Central Bank of the Republic of Türkiye",
     "US": "Board of Governors of the Federal Reserve System",
-    "ZA": "South African Reserve Bank",
-    "XM": "European Central Bank",
+    "ZA": "South African Reserve Bank", "XM": "European Central Bank",
 }
-CENTRAL_BANK_DIRECTORY_URL = "https://www.bis.org/about/organisation/members.htm"
+BIS_URL = "https://stats.bis.org/api/v1/data/WS_CBPOL/M."
+BIS_INFO_URL = "https://data.bis.org/topics/CBPOL"
+RBI_URL = "https://www.rbi.org.in/Scripts/PublicationsView.aspx?id=23865"
+RBI_AUTHORITY = "Reserve Bank of India"
 
 
 def country_from_iso2(code):
@@ -79,273 +63,213 @@ def country_from_iso2(code):
     if code == "XM":
         return "Euro area", None
     country = pycountry.countries.get(alpha_2=code)
-    if country:
-        return country.name, country.alpha_3
-    raise RuntimeError(f"Unrecognized BIS reference area code: {code}")
+    if not country:
+        raise RuntimeError(f"Unknown BIS reference area: {code}")
+    return country.name, country.alpha_3
 
 
-def country_from_iso3(code):
-    code = str(code).strip().upper()
-    # Kosovo is used by the World Bank as XKX; XK is a user-assigned ISO-2 code.
-    if code == "XKX":
-        return "Kosovo", "XK"
-    country = pycountry.countries.get(alpha_3=code)
-    if country:
-        return country.name, country.alpha_2
-    return None, None
+def flatten_columns(columns):
+    if isinstance(columns, pd.MultiIndex):
+        return [
+            " ".join(str(part) for part in col if str(part) != "nan").strip()
+            for col in columns
+        ]
+    return [str(col).strip() for col in columns]
 
 
-def world_bank(indicator, rate_type):
-    url = f"https://api.worldbank.org/v2/country/all/indicator/{indicator}"
-    observations = []
-    # Query one calendar year at a time. This avoids very large API responses
-    # that can time out when requesting all countries and years in one call.
-    for year in range(int(START[:4]), int(END[:4]) + 1):
-        page = 1
-        while True:
-            r = S.get(
-                url,
-                params={
-                    "date": str(year),
-                    "format": "json",
-                    "per_page": 1000,
-                    "page": page,
-                },
-                timeout=REQUEST_TIMEOUT,
-            )
-            r.raise_for_status()
-            payload = r.json()
-            if not isinstance(payload, list) or len(payload) < 2 or payload[1] is None:
-                break
-            meta, batch = payload
-            observations.extend(batch)
-            if page >= int(meta.get("pages", 1)):
-                break
-            page += 1
+def parse_rbi_value(value):
+    if pd.isna(value):
+        return None
+    text = str(value).strip().replace(",", "").replace("%", "")
+    if text in {"", "-", "—", "–", "NA", "N/A"}:
+        return None
+    match = re.search(r"-?\d+(?:\.\d+)?", text)
+    return float(match.group(0)) if match else None
 
-    rows = []
-    for x in observations:
-        iso3 = str(x.get("countryiso3code", "")).strip().upper()
-        if x.get("value") is None or len(iso3) != 3:
+
+def rbi_policy_rates():
+    """Read RBI's published Table 40 effective-date policy-rate history."""
+    response = S.get(RBI_URL, timeout=TIMEOUT)
+    response.raise_for_status()
+    tables = pd.read_html(io.StringIO(response.text), displayed_only=False)
+    selected = None
+    date_col = None
+    rate_cols = {}
+    for table in tables:
+        table.columns = flatten_columns(table.columns)
+        normalized = {
+            col: re.sub(r"[^a-z]", "", col.lower()) for col in table.columns
+        }
+        dc = next((col for col, key in normalized.items()
+                   if "effectivedate" in key), None)
+        if not dc:
             continue
+        found = {
+            "RBI_POLICY_BANK_RATE": next((c for c, k in normalized.items()
+                if "bankrate" in k and "marginal" not in k), None),
+            "RBI_POLICY_REPO": next((c for c, k in normalized.items()
+                if "repo" in k and "reverse" not in k and "marginal" not in k
+                and "standing" not in k), None),
+            "RBI_POLICY_REVERSE_REPO": next((c for c, k in normalized.items()
+                if "reverserepo" in k), None),
+            "RBI_POLICY_SDF": next((c for c, k in normalized.items()
+                if "standingdepositfacility" in k), None),
+            "RBI_POLICY_MSF": next((c for c, k in normalized.items()
+                if "marginalstandingfacility" in k), None),
+        }
+        if all(found.values()):
+            selected, date_col, rate_cols = table, dc, found
+            break
+    if selected is None:
+        raise RuntimeError(
+            "Could not identify RBI Table 40 columns (effective date, Bank Rate, "
+            "Repo, Reverse Repo, SDF, MSF). RBI page layout may have changed."
+        )
 
-        source_country_name = x["country"]["value"]
-        canonical_name, iso2 = country_from_iso3(iso3)
-        if not canonical_name or not iso2:
-            raise RuntimeError(
-                f"Could not map World Bank country to ISO-2/ISO-3: "
-                f"{source_country_name} / {iso3}"
-            )
-
-        year = str(x["date"])
-        period_start = f"{year}-01-01"
-        # Annual observations represent the whole calendar year. Include the
-        # start and end calendar years even when START is later than 1 January.
-        if int(year) >= int(START[:4]) and int(year) <= int(END[:4]):
+    labels = {
+        "RBI_POLICY_BANK_RATE": "Bank Rate",
+        "RBI_POLICY_REPO": "Policy Repo Rate",
+        "RBI_POLICY_REVERSE_REPO": "Fixed Reverse Repo Rate",
+        "RBI_POLICY_SDF": "Standing Deposit Facility Rate",
+        "RBI_POLICY_MSF": "Marginal Standing Facility Rate",
+    }
+    rows = []
+    for _, item in selected.iterrows():
+        effective = pd.to_datetime(item[date_col], dayfirst=True, errors="coerce")
+        if pd.isna(effective) or effective < pd.Timestamp(START) or effective > pd.Timestamp(END):
+            continue
+        for code, col in rate_cols.items():
+            value = parse_rbi_value(item[col])
+            if value is None:
+                continue
+            period = effective.strftime("%Y-%m-%d")
             rows.append({
-                "country": canonical_name,
-                "source_country_name": source_country_name,
-                "bank_name": None,
-                "bank_name_status": "not_identified_by_source",
-                "institution_name": "Commercial banking sector (country-level aggregate)",
-                "institution_type": "banking_sector_aggregate",
-                "monetary_authority_name": None,
-                "monetary_authority_source_url": None,
-                "institution_name_note": "World Bank indicator is a country-level banking-sector rate; it does not identify an individual commercial bank.",
-                "entity_type": "country",
-                "country_code": iso2,
-                "iso3": iso3,
-                "observation_date": period_start,
-                "year": int(year),
-                "month": None,
-                "interest_rate": float(x["value"]),
-                "is_estimated": False,
-                "observation_status": "official_observation",
-                "estimation_method": None,
-                "rate_type": rate_type,
-                "frequency": "annual",
-                "source_name": "World Bank World Development Indicators",
-                "source_url": f"https://data.worldbank.org/indicator/{indicator}",
-                "series_code": indicator,
-                "series_name": x["indicator"]["value"],
-                "units": "percent",
-                "source_retrieved_at": NOW,
-                "original_frequency": "annual",
-                "reference_period": year,
-                "rate_definition": (
-                    f"World Bank WDI indicator {indicator}: "
-                    f"{x['indicator']['value']}; see linked indicator metadata."
-                ),
+                "country": "India", "source_country_name": "India",
+                "entity_type": "country", "country_code": "IN", "iso3": "IND",
+                "bank_name": RBI_AUTHORITY, "authority_name": RBI_AUTHORITY,
+                "bank_name_status": "identified_financial_authority",
+                "institution_name": RBI_AUTHORITY, "institution_type": "central_bank",
+                "monetary_authority_name": RBI_AUTHORITY,
+                "monetary_authority_source_url": "https://www.rbi.org.in/",
+                "institution_name_note": "Official monetary-policy rate published by the Reserve Bank of India.",
+                "observation_date": period, "year": int(effective.year),
+                "month": int(effective.month), "interest_rate": value,
+                "is_estimated": False, "observation_status": "official_observation",
+                "estimation_method": None, "rate_type": "policy",
+                "rate_name": labels[code], "frequency": "event",
+                "source_name": "Reserve Bank of India",
+                "source_url": RBI_URL, "series_code": code,
+                "series_name": labels[code], "units": "percent per year",
+                "source_retrieved_at": NOW, "original_frequency": "effective_date",
+                "reference_period": period,
+                "rate_definition": "Rate shown in RBI Table 40 from its stated effective date.",
                 "methodology_notes": (
-                    "Annual source observation; not interpolated or expanded. "
-                    "observation_date is the period label start (1 January)."
+                    "Official RBI effective-date observation. Only cells explicitly "
+                    "published as numeric rates are included; blank/dash cells are not filled."
                 ),
             })
+    if not rows:
+        raise RuntimeError("RBI source parsed but produced no in-window policy-rate observations.")
     return pd.DataFrame(rows)
 
 
 def bis_policy():
-    # BIS monthly observations are end-of-period values.
-    url = "https://stats.bis.org/api/v1/data/WS_CBPOL/M."
-    r = S.get(
-        url,
+    response = S.get(
+        BIS_URL,
         params={"startPeriod": START[:7], "endPeriod": END[:7], "format": "csvfile"},
-        timeout=REQUEST_TIMEOUT,
+        timeout=TIMEOUT,
     )
-    r.raise_for_status()
-    raw = pd.read_csv(io.BytesIO(r.content))
+    response.raise_for_status()
+    raw = pd.read_csv(io.BytesIO(response.content))
     raw.columns = [str(c).strip() for c in raw.columns]
-
-    def find(*names):
-        wanted = {n.lower() for n in names}
-        return next((c for c in raw.columns if c.lower() in wanted), None)
-
-    tc = find("TIME_PERIOD")
-    vc = find("OBS_VALUE")
-    cc = find("REF_AREA")
-    fc = find("FREQ")
-    title_col = find("TITLE")
-    if not all([tc, vc, cc, fc]):
-        raise RuntimeError("Unexpected BIS CSV schema: " + str(list(raw.columns)))
-
+    required = {"TIME_PERIOD", "OBS_VALUE", "REF_AREA"}
+    if not required.issubset(raw.columns):
+        raise RuntimeError(f"Unexpected BIS CSV schema: {list(raw.columns)}")
     rows = []
-    for _, x in raw.iterrows():
-        period = str(x[tc]).strip()
-        period_start = pd.to_datetime(period, format="%Y-%m", errors="coerce")
-        value = pd.to_numeric(x[vc], errors="coerce")
-        if pd.isna(period_start) or pd.isna(value):
+    for _, item in raw.iterrows():
+        period = str(item["TIME_PERIOD"]).strip()
+        start = pd.to_datetime(period, format="%Y-%m", errors="coerce")
+        value = pd.to_numeric(item["OBS_VALUE"], errors="coerce")
+        if pd.isna(start) or pd.isna(value):
             continue
-
-        period_end = period_start + pd.offsets.MonthEnd(0)
-        if period_start < pd.Timestamp(START).replace(day=1) or period_end > pd.Timestamp(END):
+        if start < pd.Timestamp(START).replace(day=1) or start + pd.offsets.MonthEnd(0) > pd.Timestamp(END):
             continue
-
-        iso2 = str(x[cc]).strip().upper()
-        country_name, iso3 = country_from_iso2(iso2)
-        is_country = iso3 is not None
-        if iso2 not in CENTRAL_BANKS:
-            raise RuntimeError(
-                f"No verified monetary-authority name mapping for BIS reference area {iso2}; "
-                "add a sourced mapping rather than guessing."
-            )
+        area = str(item["REF_AREA"]).strip().upper()
+        if area not in CENTRAL_BANKS:
+            raise RuntimeError(f"No verified authority-name mapping for BIS area {area}.")
+        country, iso3 = country_from_iso2(area)
+        authority = CENTRAL_BANKS[area]
         rows.append({
-            "country": country_name,
-            "source_country_name": country_name,
-            "entity_type": "country" if is_country else "region",
-            "bank_name": CENTRAL_BANKS[iso2],
-            "bank_name_status": "identified_monetary_authority",
-            "institution_name": CENTRAL_BANKS[iso2],
-            "institution_type": "central_bank" if is_country else "regional_monetary_authority",
-            "monetary_authority_name": CENTRAL_BANKS[iso2],
-            "monetary_authority_source_url": CENTRAL_BANK_DIRECTORY_URL,
-            "institution_name_note": "BIS policy-rate reference-area monetary authority; regional aggregates are labelled separately.",
-            "country_code": iso2 if is_country else None,
-            "iso3": iso3,
-            "observation_date": period_start.strftime("%Y-%m-01"),
-            "year": int(period_start.year),
-            "month": int(period_start.month),
-            "interest_rate": float(value),
-            "is_estimated": False,
-            "observation_status": "official_observation",
-            "estimation_method": None,
-            "rate_type": "policy",
-            "frequency": "monthly",
-            "source_name": "Bank for International Settlements",
-            "source_url": "https://data.bis.org/topics/CBPOL",
-            "series_code": f"WS_CBPOL:M.{iso2}",
-            "series_name": str(x[title_col]) if title_col else f"Central bank policy rate - {country_name}",
-            "units": "percent per year",
-            "source_retrieved_at": NOW,
-            "original_frequency": "monthly",
-            "reference_period": period_start.strftime("%Y-%m"),
-            "rate_definition": "BIS selected policy rate for main policy instrument",
+            "country": country, "source_country_name": country,
+            "entity_type": "country" if iso3 else "region",
+            "country_code": area if iso3 else None, "iso3": iso3,
+            "bank_name": authority, "authority_name": authority,
+            "bank_name_status": "identified_financial_authority",
+            "institution_name": authority,
+            "institution_type": "central_bank" if iso3 else "regional_monetary_authority",
+            "monetary_authority_name": authority,
+            "monetary_authority_source_url": "https://www.bis.org/about/organisation/members.htm",
+            "institution_name_note": "Monetary authority associated with the BIS policy-rate reference area.",
+            "observation_date": start.strftime("%Y-%m-01"),
+            "year": int(start.year), "month": int(start.month),
+            "interest_rate": float(value), "is_estimated": False,
+            "observation_status": "official_observation", "estimation_method": None,
+            "rate_type": "policy", "rate_name": "BIS selected central bank policy rate",
+            "frequency": "monthly", "source_name": "Bank for International Settlements",
+            "source_url": BIS_INFO_URL, "series_code": f"WS_CBPOL:M.{area}",
+            "series_name": f"Selected central bank policy rate - {country}",
+            "units": "percent per year", "source_retrieved_at": NOW,
+            "original_frequency": "monthly", "reference_period": period,
+            "rate_definition": "BIS selected target or traded rate for the main policy instrument.",
             "methodology_notes": (
-                "BIS monthly end-of-period observation. observation_date is the "
-                "period label start (1st of month); reference_period identifies "
-                "the month. See BIS metadata for country-specific definitions."
+                "BIS monthly end-of-period observation. Date is labelled as first day "
+                "of month; reference_period identifies the month."
             ),
         })
-
     if not rows:
-        raise RuntimeError("BIS returned no monthly policy-rate rows; inspect API response/schema.")
+        raise RuntimeError("BIS returned no in-window monthly policy-rate rows.")
     return pd.DataFrame(rows)
 
 
 def main():
+    if pd.Timestamp(START) > pd.Timestamp(END):
+        raise ValueError(f"START_DATE {START} is after END_DATE {END}")
+    frames = [bis_policy(), rbi_policy_rates()]
+    data = pd.concat(frames, ignore_index=True)
+    data["observation_date"] = pd.to_datetime(data["observation_date"], errors="coerce")
+    data["interest_rate"] = pd.to_numeric(data["interest_rate"], errors="coerce")
+    data = data.dropna(subset=[
+        "country", "observation_date", "interest_rate", "rate_type",
+        "authority_name", "bank_name", "rate_name", "source_url",
+    ])
+    data = data[
+        data["observation_date"].between(pd.Timestamp(START), pd.Timestamp(END))
+    ].copy()
+    duplicate_key = ["iso3", "observation_date", "series_code"]
+    duplicates = int(data.duplicated(duplicate_key).sum())
+    if duplicates:
+        raise RuntimeError(f"Duplicate source observations detected: {duplicates}")
+    if data["authority_name"].isna().any() or data["bank_name"].isna().any():
+        raise RuntimeError("Every row must have a verified financial authority name.")
+    if data["is_estimated"].astype(bool).any():
+        raise RuntimeError("Estimated observations are not allowed in the official dataset.")
+    data = data.sort_values(["country", "series_code", "observation_date"])
+    data["observation_date"] = data["observation_date"].dt.strftime("%Y-%m-%d")
+    data["month"] = data["month"].astype("Int64")
+    data.insert(0, "observation_id", range(1, len(data) + 1))
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    frames = [
-        world_bank("FR.INR.LEND", "lending"),
-        world_bank("FR.INR.DPST", "deposit"),
-        bis_policy(),
-    ]
-    frames = [frame for frame in frames if not frame.empty]
-    if not frames:
-        raise RuntimeError("No official observations collected.")
+    data.to_csv(OUT, index=False, encoding="utf-8")
 
-    df = pd.concat(frames, ignore_index=True)
-    df["observation_date"] = pd.to_datetime(df["observation_date"], errors="coerce")
-    df["interest_rate"] = pd.to_numeric(df["interest_rate"], errors="coerce")
-    df = df.dropna(subset=["country", "observation_date", "interest_rate", "rate_type"])
-    # Apply date-window rules by source frequency. Annual records are calendar-
-    # year observations; monthly records are retained only for completed months
-    # inside the requested window.
-    annual_mask = (
-        df["frequency"].eq("annual")
-        & df["year"].between(int(START[:4]), int(END[:4]))
-    )
-    monthly_period_end = (
-        df["observation_date"] + pd.offsets.MonthEnd(0)
-    )
-    monthly_mask = (
-        df["frequency"].eq("monthly")
-        & (df["observation_date"] >= pd.Timestamp(START).replace(day=1))
-        & (monthly_period_end <= pd.Timestamp(END))
-    )
-    df = df[annual_mask | monthly_mask].copy()
-
-    # Use ISO-3 for countries and the BIS reference-area code for non-country areas.
-    df["geography_key"] = df["iso3"].fillna(df["series_code"].str.rsplit(".", n=1).str[-1])
-    duplicate_key = ["geography_key", "observation_date", "rate_type", "series_code"]
-    duplicate_count = int(df.duplicated(duplicate_key).sum())
-    if duplicate_count:
-        raise RuntimeError(f"Duplicate logical observations detected: {duplicate_count}")
-
-    # Country names are canonicalized across source systems; source labels remain preserved.
-    df = df.sort_values(["country", "rate_type", "observation_date"])
-    df["observation_date"] = df["observation_date"].dt.strftime("%Y-%m-%d")
-    df["month"] = df["month"].astype("Int64")
-    df = df.drop(columns=["geography_key"])
-    df.insert(0, "observation_id", range(1, len(df) + 1))
-    df.to_csv(OUT, index=False, encoding="utf-8")
-
-    country_count = df.loc[df["entity_type"] == "country", "iso3"].nunique()
-    india_rows = int((df["iso3"] == "IND").sum())
-    print(f"Rows: {len(df):,}; ISO3 countries: {country_count:,}")
-    print(df.groupby(["entity_type", "rate_type", "frequency"], dropna=False).size().to_string())
-    print(f"India rows: {india_rows}")
-
-    required = ["country", "entity_type", "observation_date", "year", "interest_rate",
-                "rate_type", "frequency", "source_name", "source_url", "series_code",
-                "source_retrieved_at"]
-    missing_required = [c for c in required if c not in df.columns or df[c].isna().any()]
-    if missing_required:
-        raise RuntimeError(f"Missing required fields or values: {missing_required}")
-    country_rows = df["entity_type"] == "country"
-    if df.loc[country_rows, ["country_code", "iso3"]].isna().any().any():
-        raise RuntimeError("Country observations must have both ISO-2 and ISO-3 codes.")
-    region_rows = df["entity_type"] == "region"
-    if df.loc[region_rows, "iso3"].notna().any():
-        raise RuntimeError("Regional aggregates must not be assigned country ISO-3 codes.")
-    if df.loc[df["frequency"] == "monthly", "month"].isna().any():
-        raise RuntimeError("Monthly observations have missing month values.")
-    if df.loc[df["frequency"] == "annual", "month"].notna().any():
-        raise RuntimeError("Annual observations unexpectedly have month values.")
-    if india_rows == 0:
-        raise RuntimeError("India is missing from BIS policy-rate output; verify BIS API response.")
-    if len(df) < 1000:
-        print("NOTICE: Fewer than 1,000 real rows; no synthetic rows added.")
-    if country_count < 100:
-        print("NOTICE: Fewer than 100 countries; broaden official sources.")
+    countries = data.loc[data["entity_type"] == "country", "iso3"].nunique()
+    india = data[data["iso3"] == "IND"]
+    print(f"Rows: {len(data):,}; countries: {countries:,}")
+    print(data.groupby(["source_name", "rate_name", "frequency"], dropna=False).size().to_string())
+    print(f"India official RBI rows: {len(india):,}")
+    print(f"Authorities: {data['authority_name'].nunique():,}")
+    if len(data) < 1000:
+        print("NOTICE: Fewer than 1,000 genuine observations; no synthetic rows will be added.")
+    if countries < 40:
+        print("NOTICE: Country coverage is limited to economies with supported official sources.")
 
 
 if __name__ == "__main__":
