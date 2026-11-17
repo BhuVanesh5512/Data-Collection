@@ -152,6 +152,22 @@ def rbi_policy_rates():
                 if "marginalstandingfacility" in k or k in {"msf", "msfrate"}), None),
         }
         found = {code: col for code, col in found.items() if col is not None}
+        if not found and len(table.columns) >= 7:
+            # RBI's published Table 40 has a stable official column order:
+            # Effective Date, Bank Rate, Fix Range, Repo, Reverse Repo,
+            # SDF, MSF, CRR, SLR. Exclude Fix Range and reserve ratios.
+            positions = {
+                "RBI_POLICY_BANK_RATE": 1,
+                "RBI_POLICY_REPO": 3,
+                "RBI_POLICY_REVERSE_REPO": 4,
+                "RBI_POLICY_SDF": 5,
+                "RBI_POLICY_MSF": 6,
+            }
+            found = {
+                code: table.columns[pos]
+                for code, pos in positions.items()
+                if pos < len(table.columns)
+            }
         if not found:
             continue
         selected, date_col, rate_cols = table, dc, found
