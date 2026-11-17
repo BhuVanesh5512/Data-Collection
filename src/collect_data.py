@@ -127,7 +127,15 @@ def rbi_policy_rates():
             col: re.sub(r"[^a-z]", "", col.lower()) for col in table.columns
         }
         dc = next((col for col, key in normalized.items()
-                   if "effectivedate" in key), None)
+                   if "effectivedate" in key or key == "date"), None)
+        if not dc:
+            # RBI occasionally changes the table header structure. Fall back
+            # only to a first column that actually contains parseable dates.
+            first_col = table.columns[0] if len(table.columns) else None
+            if first_col is not None:
+                sample = pd.to_datetime(table[first_col].head(12), dayfirst=True, errors="coerce")
+                if sample.notna().sum() >= 3:
+                    dc = first_col
         if not dc:
             continue
         found = {
@@ -137,15 +145,17 @@ def rbi_policy_rates():
                 if "repo" in k and "reverse" not in k and "marginal" not in k
                 and "standing" not in k), None),
             "RBI_POLICY_REVERSE_REPO": next((c for c, k in normalized.items()
-                if "reverserepo" in k), None),
+                if "reverserepo" in k or ("reverse" in k and "repo" in k)), None),
             "RBI_POLICY_SDF": next((c for c, k in normalized.items()
-                if "standingdepositfacility" in k), None),
+                if "standingdepositfacility" in k or k in {"sdf", "sdfrate"}), None),
             "RBI_POLICY_MSF": next((c for c, k in normalized.items()
-                if "marginalstandingfacility" in k), None),
+                if "marginalstandingfacility" in k or k in {"msf", "msfrate"}), None),
         }
-        if all(found.values()):
-            selected, date_col, rate_cols = table, dc, found
-            break
+        found = {code: col for code, col in found.items() if col is not None}
+        if not found:
+            continue
+        selected, date_col, rate_cols = table, dc, found
+        break
     if selected is None:
         raise RuntimeError(
             "Could not identify RBI Table 40 columns (effective date, Bank Rate, "
