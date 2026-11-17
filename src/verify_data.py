@@ -81,7 +81,14 @@ def fetch_rbi():
     for table in tables:
         table.columns = flatten_columns(table.columns)
         normalized = {c: re.sub(r"[^a-z]", "", c.lower()) for c in table.columns}
-        date_col = next((c for c, k in normalized.items() if "effectivedate" in k), None)
+        date_col = next((c for c, k in normalized.items()
+                         if "effectivedate" in k or k == "date"), None)
+        if not date_col:
+            first_col = table.columns[0] if len(table.columns) else None
+            if first_col is not None:
+                sample = pd.to_datetime(table[first_col].head(12), dayfirst=True, errors="coerce")
+                if sample.notna().sum() >= 3:
+                    date_col = first_col
         if not date_col:
             continue
         cols = {
@@ -91,13 +98,14 @@ def fetch_rbi():
                 if "repo" in k and "reverse" not in k and "marginal" not in k
                 and "standing" not in k), None),
             "RBI_POLICY_REVERSE_REPO": next((c for c, k in normalized.items()
-                if "reverserepo" in k), None),
+                if "reverserepo" in k or ("reverse" in k and "repo" in k)), None),
             "RBI_POLICY_SDF": next((c for c, k in normalized.items()
-                if "standingdepositfacility" in k), None),
+                if "standingdepositfacility" in k or k in {"sdf", "sdfrate"}), None),
             "RBI_POLICY_MSF": next((c for c, k in normalized.items()
-                if "marginalstandingfacility" in k), None),
+                if "marginalstandingfacility" in k or k in {"msf", "msfrate"}), None),
         }
-        if not all(cols.values()):
+        cols = {code: col for code, col in cols.items() if col is not None}
+        if not cols:
             continue
         for _, row in table.iterrows():
             effective = pd.to_datetime(row[date_col], dayfirst=True, errors="coerce")
