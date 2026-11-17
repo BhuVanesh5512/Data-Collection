@@ -50,7 +50,7 @@ def main():
     df["previous_period"] = df.groupby("series_code")["period"].shift(1).astype("string")
     df["previous_rate"] = df.groupby("series_code")["interest_rate"].shift(1)
     period_ord = df["period"].astype("int64")
-    previous_ord = df.groupby("series_code")["period"].shift(1).astype("Int64")
+    previous_ord = period_ord.groupby(df["series_code"]).shift(1)
     consecutive = (period_ord - previous_ord).eq(1).fillna(False)
     df["change_from_previous_observation_pp"] = df["interest_rate"] - df["previous_rate"]
     df["change_from_previous_month_pp"] = df["change_from_previous_observation_pp"].where(consecutive)
