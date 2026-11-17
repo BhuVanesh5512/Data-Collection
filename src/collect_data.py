@@ -34,6 +34,7 @@ CENTRAL_BANKS = {
     "AR": "Central Bank of Argentina", "AU": "Reserve Bank of Australia",
     "BR": "Central Bank of Brazil", "CA": "Bank of Canada",
     "CH": "Swiss National Bank", "CL": "Central Bank of Chile",
+    "HR": "Croatian National Bank",
     "CN": "People's Bank of China", "CO": "Bank of the Republic (Banco de la República)",
     "CZ": "Czech National Bank", "DK": "Danmarks Nationalbank",
     "GB": "Bank of England", "HK": "Hong Kong Monetary Authority",
@@ -232,19 +233,46 @@ def bis_policy():
 
 
 def main():
+    global START
     if pd.Timestamp(START) > pd.Timestamp(END):
         raise ValueError(f"START_DATE {START} is after END_DATE {END}")
-    frames = [bis_policy(), rbi_policy_rates()]
-    data = pd.concat(frames, ignore_index=True)
-    data["observation_date"] = pd.to_datetime(data["observation_date"], errors="coerce")
-    data["interest_rate"] = pd.to_numeric(data["interest_rate"], errors="coerce")
-    data = data.dropna(subset=[
-        "country", "observation_date", "interest_rate", "rate_type",
-        "authority_name", "bank_name", "rate_name", "source_url",
-    ])
-    data = data[
-        data["observation_date"].between(pd.Timestamp(START), pd.Timestamp(END))
-    ].copy()
+
+    # Start with five years. If the genuine official observations are still
+    # below the user's 1,000-row target, expand backwards in five-year steps.
+    # Never synthesize, interpolate, forward-fill or duplicate observations.
+    explicit_start = bool(os.getenv("START_DATE"))
+    requested_start = START
+    window_start = START
+    max_history_years = 30
+    while True:
+        START = window_start
+        frames = [bis_policy(), rbi_policy_rates()]
+        candidate = pd.concat(frames, ignore_index=True)
+        candidate["observation_date"] = pd.to_datetime(candidate["observation_date"], errors="coerce")
+        candidate["interest_rate"] = pd.to_numeric(candidate["interest_rate"], errors="coerce")
+        candidate = candidate.dropna(subset=[
+            "country", "observation_date", "interest_rate", "rate_type",
+            "authority_name", "bank_name", "rate_name", "source_url",
+        ])
+        candidate = candidate[
+            candidate["observation_date"].between(pd.Timestamp(START), pd.Timestamp(END))
+        ].copy()
+        if len(candidate) >= 1000 or explicit_start:
+            data = candidate
+            break
+        elapsed_years = (pd.Timestamp(END) - pd.Timestamp(window_start)).days / 365.2425
+        if elapsed_years >= max_history_years:
+            data = candidate
+            break
+        window_start = (
+            pd.Timestamp(window_start) - pd.DateOffset(years=5)
+        ).date().isoformat()
+        print(
+            f"Only {len(candidate):,} official rows in the current window; "
+            f"expanding history backwards to {window_start}."
+        )
+
+    data["collection_window_start"] = window_start
     duplicate_key = ["iso3", "observation_date", "series_code"]
     duplicates = int(data.duplicated(duplicate_key).sum())
     if duplicates:
@@ -262,15 +290,16 @@ def main():
 
     countries = data.loc[data["entity_type"] == "country", "iso3"].nunique()
     india = data[data["iso3"] == "IND"]
+    print(f"Collection window: {window_start} to {END}")
     print(f"Rows: {len(data):,}; countries: {countries:,}")
     print(data.groupby(["source_name", "rate_name", "frequency"], dropna=False).size().to_string())
     print(f"India official RBI rows: {len(india):,}")
     print(f"Authorities: {data['authority_name'].nunique():,}")
     if len(data) < 1000:
-        print("NOTICE: Fewer than 1,000 genuine observations; no synthetic rows will be added.")
+        print(
+            f"NOTICE: Only {len(data):,} genuine observations were available "
+            f"after searching back up to {max_history_years} years. "
+            "No synthetic rows were added."
+        )
     if countries < 40:
         print("NOTICE: Country coverage is limited to economies with supported official sources.")
-
-
-if __name__ == "__main__":
-    main()
