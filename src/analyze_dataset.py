@@ -126,7 +126,16 @@ def main():
         cross_sectional_max_pct=("interest_rate", "max"),
     ).reset_index()
     monthly["period"] = monthly["period"].astype(str)
-    monthly["interpretation_note"] = "Cross-sectional summary across available authority series; not a global policy rate."
+    complete_codes = set(country.loc[country["coverage_status"] == "complete", "series_code"])
+    balanced = raw[raw["series_code"].isin(complete_codes)]
+    balanced_monthly = balanced.groupby("period")["interest_rate"].agg(["median", "count"])
+    monthly["balanced_panel_median_pct"] = monthly["period"].map(
+        {str(k): float(v) for k, v in balanced_monthly["median"].items()}
+    )
+    monthly["balanced_panel_entities"] = monthly["period"].map(
+        {str(k): int(v) for k, v in balanced_monthly["count"].items()}
+    )
+    monthly["interpretation_note"] = "Unbalanced cross-section uses available observations; balanced panel includes only series with full window coverage. Neither is a weighted global policy rate."
     monthly.to_csv(MONTHLY_SUMMARY, index=False)
 
     latest_rows = raw.sort_values("period").groupby("series_code").tail(1)
@@ -167,6 +176,7 @@ def main():
     latest_global = latest_rows.sort_values("interest_rate", ascending=False)
     complete = country[country["coverage_status"] == "complete"].sort_values("change_since_first_observation_pp")
     top_rise = complete.tail(5).sort_values("change_since_first_observation_pp", ascending=False)
+    top_fall = complete.head(5)
     exceptions = country[country["coverage_status"] != "complete"].sort_values("coverage_pct")
     lines = [
         "# Dataset analysis and insights",
@@ -180,7 +190,8 @@ def main():
         "- bank_name is an authority label in this dataset, not a commercial bank name.",
         "",
         "## Key insights",
-        f"- The cross-sectional median policy rate was {monthly.iloc[0]['cross_sectional_median_pct']:.2f}% in {monthly.iloc[0]['period']} and {monthly.iloc[-1]['cross_sectional_median_pct']:.2f}% in {monthly.iloc[-1]['period']}. This is the median across reporting entities, not a weighted global rate.",
+        f"- The unbalanced cross-sectional median was {monthly.iloc[0]['cross_sectional_median_pct']:.2f}% in {monthly.iloc[0]['period']} and {monthly.iloc[-1]['cross_sectional_median_pct']:.2f}% in {monthly.iloc[-1]['period']}; reporting coverage changes over time.",
+        f"- In the balanced panel of {full_coverage} complete series, the median was {monthly.iloc[0]['balanced_panel_median_pct']:.2f}% at the start and {monthly.iloc[-1]['balanced_panel_median_pct']:.2f}% at the end. This compares the same set of series across months.",
         f"- {full_coverage} of {len(country)} authority series have observations in every month of the dataset window.",
         f"- {negative_values} observations are negative. Negative policy rates are retained as published, not treated as missing or errors.",
         f"- {len(high_values)} observations exceed 50%; these are flagged for contextual review, not automatically rejected.",
@@ -191,6 +202,9 @@ def main():
         lines.append(f"- {row['country']} — {row['interest_rate']:.3f}% ({row['reference_period']}); {row['authority_name']}.")
     lines += ["", "### Largest increases among fully covered series"]
     for _, row in top_rise.iterrows():
+        lines.append(f"- {row['country']}: {row['change_since_first_observation_pp']:+.2f} percentage points from {row['first_rate_pct']:.3f}% to {row['latest_rate_pct']:.3f}%.")
+    lines += ["", "### Largest decreases among fully covered series"]
+    for _, row in top_fall.iterrows():
         lines.append(f"- {row['country']}: {row['change_since_first_observation_pp']:+.2f} percentage points from {row['first_rate_pct']:.3f}% to {row['latest_rate_pct']:.3f}%.")
     lines += ["", "### Coverage exceptions"]
     if exceptions.empty:
