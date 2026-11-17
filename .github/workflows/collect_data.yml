@@ -1,4 +1,4 @@
-name: Collect and verify global bank interest rates
+name: Collect and verify global financial-authority interest rates
 on:
   workflow_dispatch:
   schedule:
@@ -22,23 +22,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Collect official observations
-        env:
-          START_DATE: "2023-12-01"
+      - name: Collect official BIS and RBI rates (rolling five-year window)
         run: python src/collect_data.py
-      - name: Independently verify official observations
-        env:
-          START_DATE: "2023-12-01"
+      - name: Independently verify every rate against fresh official sources
         run: python src/verify_data.py
-      - name: Build separate estimated monthly panel
-        run: python src/build_monthly_estimates.py
-      - name: Commit datasets and verification reports
+      - name: Commit verified official dataset and audit reports
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/processed/global_bank_interest_rates.csv
-          git add data/processed/global_bank_interest_rates_monthly_estimates.csv
           git add data/processed/source_verification.csv
           git add data/processed/source_verification_summary.json
-          git diff --cached --quiet || git commit -m "Update verified bank rates and monthly estimates"
+          git diff --cached --quiet || git commit -m "Update verified official financial authority rates"
           git push
