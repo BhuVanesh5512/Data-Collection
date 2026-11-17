@@ -6,7 +6,7 @@ This repository collects **published interest-rate observations from official mo
 
 - **Adaptive historical window:** starts with five years. If fewer than 1,000 genuine official observations are found, the collector expands backwards in five-year steps, up to 30 years or the source's available history. If a manual `START_DATE` is supplied, that exact window is respected.
 - **International policy rates:** BIS Central Bank Policy Rates (CBPOL), monthly end-of-period observations for the economies covered by BIS.
-- **India policy-rate instruments:** Reserve Bank of India (RBI) Table 40 effective-date observations for Bank Rate, Policy Repo Rate, Fixed Reverse Repo Rate, Standing Deposit Facility (SDF) Rate and Marginal Standing Facility (MSF) Rate.
+- **India policy-rate coverage:** India is included in BIS CBPOL with Reserve Bank of India as its monetary authority. RBI Table 40 is also attempted for Bank Rate, Policy Repo Rate, Fixed Reverse Repo Rate, Standing Deposit Facility (SDF) Rate and Marginal Standing Facility (MSF) Rate. If RBI's changing HTML table cannot be parsed in a run, the collector logs that limitation and retains the verified BIS observations rather than failing the whole collection or inventing RBI rows.
 - Only source-published observations are included. No linear interpolation, extrapolation, synthetic rows, share prices, equity returns, or stock-market indicators are collected.
 
 ## Official sources
@@ -42,7 +42,7 @@ BIS observations use `frequency=monthly` and month-end reference periods. RBI ob
 
 ## Verification
 
-Each workflow run independently downloads the current BIS and RBI source tables again and compares every dataset value against the official source. It writes:
+Each workflow run independently downloads the BIS source and attempts to re-read RBI Table 40. It compares every collected dataset value against the matching official source. The verification summary explicitly reports how many RBI observations were available; when RBI's HTML table cannot be parsed, only BIS observations are verified and the limitation is recorded. It writes:
 - `data/processed/source_verification.csv`
 - `data/processed/source_verification_summary.json`
 
