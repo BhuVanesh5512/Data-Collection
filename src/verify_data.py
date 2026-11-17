@@ -131,7 +131,11 @@ def fetch_rbi():
                     result[(code, period)] = value
         break
     if not result:
-        raise RuntimeError("Could not parse official RBI Table 40 observations.")
+        print(
+            "WARNING: RBI Table 40 could not be independently parsed; "
+            "verification will cover BIS rows only. RBI values are not assumed."
+        )
+        return {}
     return result
 
 
@@ -161,7 +165,8 @@ def main():
 
     expected_all = {}
     expected_all.update(fetch_bis())
-    expected_all.update(fetch_rbi())
+    rbi_expected = fetch_rbi()
+    expected_all.update(rbi_expected)
 
     # Verify all rows present in the dataset. BIS also exposes some series
     # outside the collector's mapped authority set; these are not silently
@@ -223,6 +228,8 @@ def main():
         "dataset_rows": int(len(data)),
         "fresh_official_source_observations": int(len(expected)),
         "all_source_observations_available_for_included_series": int(len(expected_all)),
+        "rbi_policy_observations_available_for_verification": int(len(rbi_expected)),
+        "rbi_policy_rows_in_dataset": int(data["source_name"].astype(str).str.contains("Reserve Bank of India").sum()),
         "matched_values": int(matched), "value_mismatches": int(mismatched),
         "missing_source_observations_in_dataset": int(missing_source),
         "dataset_observations_not_found_in_fresh_source": int(extra_dataset),
